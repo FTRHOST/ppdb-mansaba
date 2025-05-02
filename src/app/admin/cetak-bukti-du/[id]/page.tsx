@@ -130,11 +130,6 @@ const CetakBuktiDUPage = () => {
            };
           setData(mappedData);
 
-          // Removed automatic print trigger
-          // setTimeout(() => {
-          //    handlePrint();
-          // }, 100);
-
         } else {
           setError(`Data daftar ulang dengan ID ${daftarUlangId} tidak ditemukan.`);
         }
@@ -172,7 +167,7 @@ const CetakBuktiDUPage = () => {
          .join('\n');
        console.log('Collected styles for print window.');
 
-      const printWindow = window.open('', '', 'height=800,width=600'); // Adjust size as needed
+      const printWindow = window.open('', '', 'height=800,width=800'); // Use A4-like size
       if (printWindow) {
           console.log('Print window opened successfully.');
          printWindow.document.write('<html><head><title>');
@@ -183,8 +178,8 @@ const CetakBuktiDUPage = () => {
           // Add print-specific styles
           printWindow.document.write(`
             @media print {
-              @page { size: A5 landscape; margin: 10mm; } /* Example: A5 Landscape */
-              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: sans-serif; }
+              @page { size: A4 portrait; margin: 10mm; } /* Changed to A4 Portrait */
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: sans-serif; font-size: 10pt; } /* Base font size */
               .no-print { display: none !important; }
               .print-container {
                  width: 100%;
@@ -194,19 +189,37 @@ const CetakBuktiDUPage = () => {
                  border: none;
                  box-shadow: none;
               }
-              /* Add other specific styles for Bukti DU */
-              .font-sans { font-family: sans-serif !important; }
-              .text-xs { font-size: 10pt !important; line-height: 1.4 !important; }
-              .text-sm { font-size: 11pt !important; line-height: 1.4 !important; }
-              .text-base { font-size: 12pt !important; line-height: 1.4 !important; }
-              .text-lg { font-size: 14pt !important; line-height: 1.4 !important; }
-              .mb-1 { margin-bottom: 0.2rem !important; }
-              .mb-2 { margin-bottom: 0.4rem !important; }
-              .mb-4 { margin-bottom: 0.8rem !important; }
-              .my-3 { margin-top: 0.6rem !important; margin-bottom: 0.6rem !important; }
-              .my-4 { margin-top: 0.8rem !important; margin-bottom: 0.8rem !important; }
-              .mt-6 { margin-top: 1.2rem !important; }
-              .pb-2 { padding-bottom: 0.4rem !important; }
+              /* Add other specific styles for Bukti DU - adjust font sizes if needed */
+              .text-xs { font-size: 9pt !important; line-height: 1.3 !important; }
+              .text-sm { font-size: 10pt !important; line-height: 1.3 !important; }
+              .text-base { font-size: 11pt !important; line-height: 1.3 !important; }
+              .text-lg { font-size: 12pt !important; line-height: 1.3 !important; }
+              .mb-1 { margin-bottom: 0.15rem !important; }
+              .mb-2 { margin-bottom: 0.3rem !important; }
+              .mb-3 { margin-bottom: 0.5rem !important; }
+              .mb-4 { margin-bottom: 0.7rem !important; }
+              .mt-2 { margin-top: 0.3rem !important; }
+              .mt-4 { margin-top: 0.7rem !important; }
+              .mt-6 { margin-top: 1rem !important; }
+              .my-2 { margin-top: 0.3rem !important; margin-bottom: 0.3rem !important; }
+              .my-3 { margin-top: 0.5rem !important; margin-bottom: 0.5rem !important; }
+              .my-4 { margin-top: 0.7rem !important; margin-bottom: 0.7rem !important; }
+              .pb-1 { padding-bottom: 0.15rem !important; }
+              .pb-2 { padding-bottom: 0.3rem !important; }
+              .p-1 { padding: 0.15rem !important; }
+              .p-1_5 { padding: 0.2rem !important; } /* Custom if needed */
+              .p-2 { padding: 0.3rem !important; }
+              .p-3 { padding: 0.5rem !important; }
+              .px-1_5 { padding-left: 0.2rem !important; padding-right: 0.2rem !important; }
+              .px-2 { padding-left: 0.3rem !important; padding-right: 0.3rem !important; }
+              .py-0_5 { padding-top: 0.1rem !important; padding-bottom: 0.1rem !important; }
+              .gap-4 { gap: 0.7rem !important; }
+              .gap-6 { gap: 1rem !important; }
+
+              /* Ensure break-inside-avoid works */
+              .break-inside-avoid { break-inside: avoid; }
+
+              hr { border-color: #aaa; margin-top: 0.5rem; margin-bottom: 0.5rem; } /* Style the hr */
             }
           `);
          printWindow.document.write('</style>');
@@ -254,7 +267,7 @@ const CetakBuktiDUPage = () => {
        {/* Button is hidden in print view */}
        <div className="mb-4 text-center no-print">
          <Button onClick={handlePrint} >
-           <Printer className="mr-2 h-4 w-4" /> Cetak Ulang Bukti
+           <Printer className="mr-2 h-4 w-4" /> Cetak Bukti (2 Lembar)
          </Button>
        </div>
       {/* This div is what gets printed */}
