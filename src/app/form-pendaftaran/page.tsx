@@ -77,14 +77,17 @@ const formSchema = z.object({
   punyaPiagam: z.enum(['Punya', 'Tidak Punya']).optional(), // Optional
   motivasi: z.string().min(1, { message: 'Motivasi mendaftar harus diisi.' }),
 }).refine(data => {
-  if (data.tinggal === 'Bersama Wali' && (!data.namaWali || !data.hubunganWali || !data.pendidikanWali || !data.pekerjaanWali || !data.alamatWali)) {
-    return false;
+  // Validation for Wali fields only if 'Tinggal Dengan' is 'Bersama Wali'
+  if (data.tinggal === 'Bersama Wali') {
+    return !!data.namaWali && !!data.hubunganWali && !!data.pendidikanWali && !!data.pekerjaanWali && !!data.alamatWali;
   }
   return true;
 }, {
-  message: 'Data Wali wajib diisi jika tinggal bersama Wali.',
-  path: ['namaWali'], // Attach error to one of the wali fields
+  // Apply this message only when the condition in refine fails for the Wali case
+  message: 'Data Wali (Nama, Hubungan, Pendidikan, Pekerjaan, Alamat) wajib diisi jika tinggal bersama Wali.',
+  path: ['namaWali'], // Attach error to one of the wali fields for form display
 });
+
 
 export default function FormPendaftaranPage() {
   const form = useForm<z.infer<typeof formSchema>>({
@@ -210,21 +213,27 @@ export default function FormPendaftaranPage() {
 
     // --- TODO: Replace with actual API call ---
     // Simulating API call success
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    toast({
-      title: "Pendaftaran Berhasil!",
-      description: "Data Anda telah berhasil dikirim.",
-      variant: "default", // Use 'default' for success, maybe a custom green variant later
-    });
-    form.reset(); // Reset form after successful submission
-    setTempatTanggalLahir(''); // Clear derived fields
-    setAlamatLengkap(''); // Clear derived fields
-    // Simulate API call error
-    // toast({
-    //   title: "Pendaftaran Gagal!",
-    //   description: "Terjadi kesalahan saat mengirim data. Silakan coba lagi.",
-    //   variant: "destructive",
-    // });
+    try {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        toast({
+            title: "Pendaftaran Berhasil!",
+            description: "Data Anda telah berhasil dikirim.",
+            variant: "default", // Use 'default' for success, maybe a custom green variant later
+        });
+        form.reset(); // Reset form after successful submission
+        setTempatTanggalLahir(''); // Clear derived fields
+        setAlamatLengkap(''); // Clear derived fields
+        // TODO: Generate and display/download Nomor Pendaftaran here
+        // const nomorPendaftaran = generateNomorPendaftaran(); // Need implementation
+        // alert(`Pendaftaran Berhasil! Nomor Pendaftaran Anda: ${nomorPendaftaran}`);
+    } catch (error) {
+        console.error("Submission error:", error);
+        toast({
+            title: "Pendaftaran Gagal!",
+            description: "Terjadi kesalahan saat mengirim data. Silakan coba lagi.",
+            variant: "destructive",
+        });
+    }
     // --- End of TODO ---
   }
 
