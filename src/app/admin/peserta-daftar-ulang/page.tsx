@@ -1,3 +1,4 @@
+
 'use client';
 
 import type React from 'react';
@@ -23,6 +24,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale'; // Import Indonesian locale
 
 // Mock data structure - adjust based on actual daftar ulang data
 interface PesertaDaftarUlang {
@@ -149,7 +152,7 @@ export default function PesertaDaftarUlangPage() {
                       <TableCell>{item.nomorPendaftaran}</TableCell>
                       <TableCell>{item.nama}</TableCell>
                       <TableCell>{item.sekolahAsal}</TableCell>
-                      <TableCell>{format(new Date(item.tanggalDaftarUlang), 'dd/MM/yy')}</TableCell> {/* Example formatting */}
+                      <TableCell>{format(new Date(item.tanggalDaftarUlang), 'dd MMMM yyyy', { locale: id })}</TableCell> {/* Updated formatting */}
                        <TableCell>{item.ukuranSeragam}</TableCell>
                       <TableCell className="text-right">
                          <DropdownMenu>
@@ -190,3 +193,4 @@ export default function PesertaDaftarUlangPage() {
     </div>
   );
 }
+

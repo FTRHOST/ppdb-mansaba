@@ -1,3 +1,4 @@
+
 'use client';
 
 import type React from 'react';
@@ -33,6 +34,7 @@ import {
 } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
 import { format, parse } from 'date-fns';
+import { id } from 'date-fns/locale'; // Import Indonesian locale
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
@@ -151,7 +153,8 @@ export default function FormPendaftaranPage() {
   useEffect(() => {
     if (watchedTempatLahir && watchedTanggalLahir) {
       try {
-        const formattedDate = format(watchedTanggalLahir, 'dd-MMM-yyyy');
+        // Updated format: "dd MMMM yyyy" with Indonesian locale
+        const formattedDate = format(watchedTanggalLahir, 'dd MMMM yyyy', { locale: id });
         setTempatTanggalLahir(`${watchedTempatLahir}, ${formattedDate}`);
       } catch (error) {
         console.error("Error formatting date:", error);
@@ -401,7 +404,7 @@ export default function FormPendaftaranPage() {
                                     )}
                                   >
                                     {field.value ? (
-                                      format(field.value, "dd/MM/yyyy")
+                                      format(field.value, "dd MMMM yyyy", { locale: id }) // Updated format
                                     ) : (
                                       <span>Pilih tanggal</span>
                                     )}
@@ -414,6 +417,7 @@ export default function FormPendaftaranPage() {
                                   mode="single"
                                   selected={field.value}
                                   onSelect={field.onChange}
+                                  locale={id} // Set locale for calendar
                                   disabled={(date) =>
                                     date > new Date() || date < new Date("1990-01-01")
                                   }
@@ -965,3 +969,4 @@ export default function FormPendaftaranPage() {
     </div>
   );
 }
+
