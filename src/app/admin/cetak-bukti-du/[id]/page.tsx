@@ -130,10 +130,10 @@ const CetakBuktiDUPage = () => {
            };
           setData(mappedData);
 
-          // Automatically trigger print dialog after data loads
-          setTimeout(() => {
-             handlePrint();
-          }, 100); // Short delay to ensure rendering
+          // Removed automatic print trigger
+          // setTimeout(() => {
+          //    handlePrint();
+          // }, 100);
 
         } else {
           setError(`Data daftar ulang dengan ID ${daftarUlangId} tidak ditemukan.`);
@@ -150,10 +150,13 @@ const CetakBuktiDUPage = () => {
   }, [daftarUlangId]);
 
  const handlePrint = () => {
+   console.log('Handle Print button clicked.');
    const printContent = printRef.current;
    if (printContent) {
+       console.log('Print content found, proceeding with print logic.');
       const originalTitle = document.title;
        document.title = `Bukti Daftar Ulang - ${data?.namaPendaftar || daftarUlangId}`; // Set title
+       console.log('Document title set to:', document.title);
 
       const styles = Array.from(document.styleSheets)
          .map(styleSheet => {
@@ -167,9 +170,11 @@ const CetakBuktiDUPage = () => {
            }
          })
          .join('\n');
+       console.log('Collected styles for print window.');
 
       const printWindow = window.open('', '', 'height=800,width=600'); // Adjust size as needed
       if (printWindow) {
+          console.log('Print window opened successfully.');
          printWindow.document.write('<html><head><title>');
          printWindow.document.write(document.title);
          printWindow.document.write('</title>');
@@ -215,14 +220,20 @@ const CetakBuktiDUPage = () => {
 
          // Delay print command slightly
           setTimeout(() => {
+            console.log('Executing print command.');
             printWindow.print();
+            console.log('Closing print window.');
             printWindow.close();
           }, 250);
 
+         console.log('Restoring original document title.');
          document.title = originalTitle; // Restore original title
       } else {
+        console.error('Failed to open print window. Pop-up might be blocked.');
         alert('Gagal membuka jendela cetak. Mohon izinkan pop-up untuk situs ini.');
       }
+   } else {
+       console.error('Print content ref is null.');
    }
  };
 
@@ -255,4 +266,3 @@ const CetakBuktiDUPage = () => {
 };
 
 export default CetakBuktiDUPage;
-```

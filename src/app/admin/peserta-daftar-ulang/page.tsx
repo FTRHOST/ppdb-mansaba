@@ -64,10 +64,17 @@ export default function PesertaDaftarUlangPage() {
   }, []);
 
   const handlePrintBukti = (daftarUlangId: number) => {
-    console.log('Opening print bukti for daftar ulang ID:', daftarUlangId);
+    console.log('Print Bukti Clicked for Daftar Ulang ID:', daftarUlangId);
     // Open the print page in a new tab/window, passing the DAFTAR ULANG ID
     const printUrl = `/admin/cetak-bukti-du/${daftarUlangId}`;
-    window.open(printUrl, '_blank', 'noopener,noreferrer');
+    console.log('Attempting to open URL:', printUrl);
+    const newWindow = window.open(printUrl, '_blank', 'noopener,noreferrer');
+    if (newWindow) {
+        console.log('New window opened successfully.');
+    } else {
+        console.error('Failed to open new window. Check pop-up blocker.');
+        alert('Gagal membuka halaman cetak. Mohon izinkan pop-up untuk situs ini.');
+    }
   };
 
   const handleEditDaftarUlang = (id: number) => {
