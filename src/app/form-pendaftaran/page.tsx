@@ -276,7 +276,7 @@ export default function FormPendaftaranPage() {
                      <FormItem>
                        <FormLabel>Rekomendasi Pendaftaran (Siapa yang mendaftarkan?)</FormLabel>
                        <FormControl>
-                         <Input placeholder="Contoh: Guru MTs, Saudara, Tetangga" {...field} />
+                         <Input placeholder="Contoh: Nama Guru, Nama Teman, dll" {...field} />
                        </FormControl>
                        <FormMessage />
                      </FormItem>
