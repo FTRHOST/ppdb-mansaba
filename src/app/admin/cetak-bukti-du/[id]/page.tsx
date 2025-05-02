@@ -178,60 +178,82 @@ const CetakBuktiDUPage = () => {
           // Add print-specific styles
           printWindow.document.write(`
             @media print {
-              @page { size: A4 landscape; margin: 10mm; } /* Changed to A4 LANDSCAPE */
+              @page { size: A4 landscape; margin: 5mm; } /* Reduced margin */
               body {
                  -webkit-print-color-adjust: exact;
                  print-color-adjust: exact;
-                 font-family: sans-serif;
-                 font-size: 10pt;
+                 font-family: 'Times New Roman', Times, serif; /* Use a common serif font */
+                 font-size: 9pt; /* Smaller base font size */
+                 line-height: 1.1; /* Tighter line height */
                  margin: 0;
                  padding: 0;
               }
               .no-print { display: none !important; }
               .print-container {
                  width: 100%;
-                 max-width: 100%;
+                 max-width: 100%; /* Use full width */
                  margin: 0;
                  padding: 0;
                  border: none;
                  box-shadow: none;
-                 display: flex; /* Use flex for side-by-side */
-                 justify-content: center; /* Center items if needed */
-                 align-items: flex-start; /* Align items to top */
-                 gap: 10mm; /* Adjust gap between receipts */
+                 display: flex;
+                 justify-content: space-between; /* Space out receipts */
+                 align-items: flex-start;
+                 gap: 5mm; /* Reduced gap */
               }
-              .receipt-container { /* Container for each receipt in bukti-daftar-ulang-print */
-                 flex: 1; /* Each receipt takes equal space */
-                 max-width: calc(50% - 5mm); /* Width considering the gap */
-                 border: 1px solid black; /* Maintain border for individual receipts */
-                 padding: 3mm; /* Add some padding inside */
-                 box-sizing: border-box; /* Include padding and border in width */
-                 height: fit-content; /* Adjust height based on content */
-                 overflow: hidden; /* Prevent content overflow issues */
+              .receipt-container {
+                 flex: 1;
+                 max-width: calc(50% - 2.5mm); /* Adjust width considering gap */
+                 border: 1px solid black;
+                 padding: 2mm; /* Reduced padding */
+                 box-sizing: border-box;
+                 height: auto; /* Let height adjust */
+                 overflow: hidden;
               }
 
-              /* Apply base font size adjustments */
-              .text-xs { font-size: 8pt !important; line-height: 1.2 !important; }
-              .text-sm { font-size: 9pt !important; line-height: 1.2 !important; }
-              .text-base { font-size: 10pt !important; line-height: 1.2 !important; }
-              .text-lg { font-size: 11pt !important; line-height: 1.2 !important; }
+              /* Override Tailwind/Component styles for print */
+              .receipt-container .text-xs { font-size: 8pt !important; line-height: 1.1 !important; }
+              .receipt-container .text-sm { font-size: 9pt !important; line-height: 1.1 !important; }
+              .receipt-container .text-base { font-size: 10pt !important; line-height: 1.1 !important; }
+              .receipt-container .font-bold { font-weight: bold !important; }
+              .receipt-container .font-semibold { font-weight: 600 !important; }
+              .receipt-container .font-medium { font-weight: 500 !important; }
+              .receipt-container .mb-0_5 { margin-bottom: 0.5mm !important; }
+              .receipt-container .mb-1 { margin-bottom: 1mm !important; }
+              .receipt-container .mb-2 { margin-bottom: 2mm !important; }
+              .receipt-container .mt-1 { margin-top: 1mm !important; }
+              .receipt-container .mt-2 { margin-top: 2mm !important; }
+              .receipt-container .my-1 { margin-top: 1mm !important; margin-bottom: 1mm !important; }
+              .receipt-container .my-2 { margin-top: 2mm !important; margin-bottom: 2mm !important; }
+              .receipt-container .pb-1 { padding-bottom: 1mm !important; }
+              .receipt-container .p-1 { padding: 1mm !important; }
+              .receipt-container .p-2 { padding: 2mm !important; }
+              .receipt-container .ml-2 { margin-left: 2mm !important; }
+              .receipt-container .mr-1 { margin-right: 1mm !important; }
+              .receipt-container .px-1 { padding-left: 1mm !important; padding-right: 1mm !important; }
+              .receipt-container .py-0_5 { padding-top: 0.5mm !important; padding-bottom: 0.5mm !important; }
+              .receipt-container .w-10 { width: 25pt !important; } /* Adjust logo size */
+              .receipt-container .h-10 { height: 25pt !important; }
+              .receipt-container .w-8 { width: 20pt !important; }
+              .receipt-container .h-8 { height: 20pt !important; }
+              .receipt-container .w-6 { width: 15pt !important; }
+              .receipt-container .h-6 { height: 15pt !important; }
+              .receipt-container .w-5 { width: 12pt !important; }
+              .receipt-container .h-5 { height: 12pt !important; }
+              .receipt-container .w-2_5 { width: 7pt !important; } /* Adjust icon size */
+              .receipt-container .h-2_5 { height: 7pt !important; }
+              .receipt-container .w-2 { width: 5pt !important; }
+              .receipt-container .h-2 { height: 5pt !important; }
+              .receipt-container .w-24 { width: 60pt !important; } /* Adjust label width */
+              .receipt-container .w-20 { width: 50pt !important; }
+              .receipt-container .text-\[9px\] { font-size: 7pt !important; } /* Adjust specific font sizes */
+              .receipt-container .text-\[10pt\] { font-size: 10pt !important; }
+              .receipt-container .text-\[8pt\] { font-size: 8pt !important; }
+              .receipt-container .text-\[7pt\] { font-size: 7pt !important; }
 
-              /* Reduce margins and paddings slightly for landscape */
-              .mb-1 { margin-bottom: 0.1rem !important; }
-              .mb-2 { margin-bottom: 0.2rem !important; }
-              .mb-3 { margin-bottom: 0.4rem !important; }
-              .mt-2 { margin-top: 0.2rem !important; }
-              .mt-4 { margin-top: 0.6rem !important; }
-              .my-2 { margin-top: 0.2rem !important; margin-bottom: 0.2rem !important; }
-              .pb-1 { padding-bottom: 0.1rem !important; }
-              .p-1_5 { padding: 0.15rem !important; }
-              .p-2 { padding: 0.2rem !important; }
-              .p-3 { padding: 0.4rem !important; }
 
-              /* Ensure break-inside-avoid still works if needed within receipt */
+              /* Ensure break-inside-avoid works if needed */
               .break-inside-avoid { break-inside: avoid; }
-
-              hr.print-separator { display: none !important; } /* Hide the original separator */
             }
           `);
          printWindow.document.write('</style>');
