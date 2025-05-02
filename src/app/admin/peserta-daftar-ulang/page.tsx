@@ -1,3 +1,4 @@
+
 'use client';
 
 import type React from 'react';
@@ -27,6 +28,7 @@ import { MoreHorizontal } from "lucide-react";
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale'; // Import Indonesian locale
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils'; // Import cn utility
 
 // Mock data structure - adjust based on actual daftar ulang data
 export interface PesertaDaftarUlang {
@@ -66,6 +68,16 @@ export default function PesertaDaftarUlangPage() {
   }, []);
 
   const handlePrintBukti = (daftarUlangId: number) => {
+    console.log('Attempting to print Bukti for Daftar Ulang ID:', daftarUlangId); // Debug log
+     if (!daftarUlangId) {
+         console.error('Invalid ID passed to handlePrintBukti');
+         toast({
+            title: "Error",
+            description: "ID pendaftar tidak valid untuk mencetak bukti.",
+            variant: "destructive",
+         });
+         return;
+     }
     console.log('Opening print bukti for Daftar Ulang ID:', daftarUlangId);
     const printUrl = `/admin/cetak-bukti-du/${daftarUlangId}`;
     const newWindow = window.open(printUrl, '_blank', 'noopener,noreferrer');
@@ -82,6 +94,16 @@ export default function PesertaDaftarUlangPage() {
   };
 
   const handleEditDaftarUlang = (id: number) => {
+    console.log('Attempting to edit Daftar Ulang ID:', id); // Debug log
+    if (!id) {
+        console.error('Invalid ID passed to handleEditDaftarUlang');
+         toast({
+            title: "Error",
+            description: "ID pendaftar tidak valid untuk diedit.",
+            variant: "destructive",
+         });
+        return;
+    }
     console.log('Navigating to edit daftar ulang page for ID:', id);
     // Navigate to the edit page, passing the Daftar Ulang ID
     router.push(`/admin/edit-daftar-ulang/${id}`);
@@ -195,12 +217,23 @@ export default function PesertaDaftarUlangPage() {
                            </DropdownMenuTrigger>
                            <DropdownMenuContent align="end">
                              <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                             <DropdownMenuItem onClick={() => handleEditDaftarUlang(item.id)}>
+                             <DropdownMenuItem
+                               onClick={(e) => {
+                                 // e.stopPropagation(); // Optional: Stop event propagation if needed
+                                 handleEditDaftarUlang(item.id);
+                               }}
+                               className="cursor-pointer" // Ensure cursor indicates interactivity
+                             >
                                <Edit className="mr-2 h-4 w-4" />
                                <span>Edit Daftar Ulang</span>
                              </DropdownMenuItem>
-                             {/* Correctly wire the onClick handler */}
-                             <DropdownMenuItem onClick={() => handlePrintBukti(item.id)}>
+                             <DropdownMenuItem
+                               onClick={(e) => {
+                                 // e.stopPropagation(); // Optional: Stop event propagation if needed
+                                 handlePrintBukti(item.id);
+                               }}
+                               className="cursor-pointer" // Ensure cursor indicates interactivity
+                             >
                                <Printer className="mr-2 h-4 w-4" />
                                <span>Cetak Bukti</span>
                              </DropdownMenuItem>
@@ -225,3 +258,5 @@ export default function PesertaDaftarUlangPage() {
     </div>
   );
 }
+
+    
