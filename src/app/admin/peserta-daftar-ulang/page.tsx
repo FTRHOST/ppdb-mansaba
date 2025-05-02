@@ -139,7 +139,7 @@ export default function PesertaDaftarUlangPage() {
                   <TableHead>Nama Lengkap</TableHead>
                   <TableHead>Sekolah Asal</TableHead>
                   <TableHead>Tgl Daftar Ulang</TableHead>
-                   <TableHead>Ukuran Seragam</TableHead>
+                  <TableHead>Ukuran Seragam</TableHead>
                   <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
@@ -152,8 +152,8 @@ export default function PesertaDaftarUlangPage() {
                       <TableCell>{item.nomorPendaftaran}</TableCell>
                       <TableCell>{item.nama}</TableCell>
                       <TableCell>{item.sekolahAsal}</TableCell>
-                      <TableCell>{format(new Date(item.tanggalDaftarUlang), 'dd MMMM yyyy', { locale: id })}</TableCell> {/* Updated formatting */}
-                       <TableCell>{item.ukuranSeragam}</TableCell>
+                      <TableCell>{format(new Date(item.tanggalDaftarUlang), 'dd MMMM yyyy', { locale: id })}</TableCell>
+                      <TableCell>{item.ukuranSeragam}</TableCell>
                       <TableCell className="text-right">
                          <DropdownMenu>
                            <DropdownMenuTrigger asChild>
