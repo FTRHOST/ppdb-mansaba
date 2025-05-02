@@ -167,7 +167,7 @@ const CetakBuktiDUPage = () => {
          .join('\n');
        console.log('Collected styles for print window.');
 
-      const printWindow = window.open('', '', 'height=800,width=800'); // Use A4-like size
+      const printWindow = window.open('', '', 'height=600,width=800'); // Use landscape-like size
       if (printWindow) {
           console.log('Print window opened successfully.');
          printWindow.document.write('<html><head><title>');
@@ -178,8 +178,15 @@ const CetakBuktiDUPage = () => {
           // Add print-specific styles
           printWindow.document.write(`
             @media print {
-              @page { size: A4 portrait; margin: 10mm; } /* Changed to A4 Portrait */
-              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: sans-serif; font-size: 10pt; } /* Base font size */
+              @page { size: A4 landscape; margin: 10mm; } /* Changed to A4 LANDSCAPE */
+              body {
+                 -webkit-print-color-adjust: exact;
+                 print-color-adjust: exact;
+                 font-family: sans-serif;
+                 font-size: 10pt;
+                 margin: 0;
+                 padding: 0;
+              }
               .no-print { display: none !important; }
               .print-container {
                  width: 100%;
@@ -188,45 +195,49 @@ const CetakBuktiDUPage = () => {
                  padding: 0;
                  border: none;
                  box-shadow: none;
+                 display: flex; /* Use flex for side-by-side */
+                 justify-content: center; /* Center items if needed */
+                 align-items: flex-start; /* Align items to top */
+                 gap: 10mm; /* Adjust gap between receipts */
               }
-              /* Add other specific styles for Bukti DU - adjust font sizes if needed */
-              .text-xs { font-size: 9pt !important; line-height: 1.3 !important; }
-              .text-sm { font-size: 10pt !important; line-height: 1.3 !important; }
-              .text-base { font-size: 11pt !important; line-height: 1.3 !important; }
-              .text-lg { font-size: 12pt !important; line-height: 1.3 !important; }
-              .mb-1 { margin-bottom: 0.15rem !important; }
-              .mb-2 { margin-bottom: 0.3rem !important; }
-              .mb-3 { margin-bottom: 0.5rem !important; }
-              .mb-4 { margin-bottom: 0.7rem !important; }
-              .mt-2 { margin-top: 0.3rem !important; }
-              .mt-4 { margin-top: 0.7rem !important; }
-              .mt-6 { margin-top: 1rem !important; }
-              .my-2 { margin-top: 0.3rem !important; margin-bottom: 0.3rem !important; }
-              .my-3 { margin-top: 0.5rem !important; margin-bottom: 0.5rem !important; }
-              .my-4 { margin-top: 0.7rem !important; margin-bottom: 0.7rem !important; }
-              .pb-1 { padding-bottom: 0.15rem !important; }
-              .pb-2 { padding-bottom: 0.3rem !important; }
-              .p-1 { padding: 0.15rem !important; }
-              .p-1_5 { padding: 0.2rem !important; } /* Custom if needed */
-              .p-2 { padding: 0.3rem !important; }
-              .p-3 { padding: 0.5rem !important; }
-              .px-1_5 { padding-left: 0.2rem !important; padding-right: 0.2rem !important; }
-              .px-2 { padding-left: 0.3rem !important; padding-right: 0.3rem !important; }
-              .py-0_5 { padding-top: 0.1rem !important; padding-bottom: 0.1rem !important; }
-              .gap-4 { gap: 0.7rem !important; }
-              .gap-6 { gap: 1rem !important; }
+              .receipt-container { /* Container for each receipt in bukti-daftar-ulang-print */
+                 flex: 1; /* Each receipt takes equal space */
+                 max-width: calc(50% - 5mm); /* Width considering the gap */
+                 border: 1px solid black; /* Maintain border for individual receipts */
+                 padding: 3mm; /* Add some padding inside */
+                 box-sizing: border-box; /* Include padding and border in width */
+                 height: fit-content; /* Adjust height based on content */
+                 overflow: hidden; /* Prevent content overflow issues */
+              }
 
-              /* Ensure break-inside-avoid works */
+              /* Apply base font size adjustments */
+              .text-xs { font-size: 8pt !important; line-height: 1.2 !important; }
+              .text-sm { font-size: 9pt !important; line-height: 1.2 !important; }
+              .text-base { font-size: 10pt !important; line-height: 1.2 !important; }
+              .text-lg { font-size: 11pt !important; line-height: 1.2 !important; }
+
+              /* Reduce margins and paddings slightly for landscape */
+              .mb-1 { margin-bottom: 0.1rem !important; }
+              .mb-2 { margin-bottom: 0.2rem !important; }
+              .mb-3 { margin-bottom: 0.4rem !important; }
+              .mt-2 { margin-top: 0.2rem !important; }
+              .mt-4 { margin-top: 0.6rem !important; }
+              .my-2 { margin-top: 0.2rem !important; margin-bottom: 0.2rem !important; }
+              .pb-1 { padding-bottom: 0.1rem !important; }
+              .p-1_5 { padding: 0.15rem !important; }
+              .p-2 { padding: 0.2rem !important; }
+              .p-3 { padding: 0.4rem !important; }
+
+              /* Ensure break-inside-avoid still works if needed within receipt */
               .break-inside-avoid { break-inside: avoid; }
 
-              hr { border-color: #aaa; margin-top: 0.5rem; margin-bottom: 0.5rem; } /* Style the hr */
+              hr.print-separator { display: none !important; } /* Hide the original separator */
             }
           `);
          printWindow.document.write('</style>');
          printWindow.document.write('</head><body>');
-         printWindow.document.write('<div class="print-container">'); // Wrap content
+         // Use the modified print-container structure from bukti-daftar-ulang-print
          printWindow.document.write(printContent.innerHTML);
-         printWindow.document.write('</div>');
          printWindow.document.write('</body></html>');
          printWindow.document.close();
          printWindow.focus();
@@ -263,15 +274,16 @@ const CetakBuktiDUPage = () => {
   }
 
   return (
-    <div className="bg-gray-100 p-4 print:bg-white">
+    <div className="bg-gray-100 p-4 print:bg-white print:p-0">
        {/* Button is hidden in print view */}
        <div className="mb-4 text-center no-print">
          <Button onClick={handlePrint} >
-           <Printer className="mr-2 h-4 w-4" /> Cetak Bukti (2 Lembar)
+           <Printer className="mr-2 h-4 w-4" /> Cetak Bukti (Landscape)
          </Button>
        </div>
       {/* This div is what gets printed */}
-      <div ref={printRef} className="print-container">
+      <div ref={printRef}>
+        {/* The BuktiDaftarUlangPrint component now handles the flex layout for print */}
         <BuktiDaftarUlangPrint data={data} />
       </div>
     </div>
