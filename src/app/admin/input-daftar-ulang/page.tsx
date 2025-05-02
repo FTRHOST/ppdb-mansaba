@@ -1,3 +1,4 @@
+
 'use client';
 
 import type React from 'react';
@@ -15,13 +16,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox'; // Import Combobox
 import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -45,7 +40,7 @@ const mockPendaftar = [
 ];
 
 const daftarUlangSchema = z.object({
-  pendaftarId: z.string({ required_error: 'Siswa pendaftar harus dipilih.' }),
+  pendaftarId: z.string({ required_error: 'Siswa pendaftar harus dipilih.' }).min(1, 'Siswa pendaftar harus dipilih.'),
   nomorDaftarUlang: z.string(), // Readonly, generated automatically
   kelengkapanKK: z.boolean().default(false),
   kelengkapanSKL: z.boolean().default(false),
@@ -70,9 +65,21 @@ const daftarUlangSchema = z.object({
 });
 
 export default function InputDaftarUlangPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredPendaftar, setFilteredPendaftar] = useState(mockPendaftar);
+  // const [searchTerm, setSearchTerm] = useState(''); // No longer needed for Combobox internal search
+  // const [filteredPendaftar, setFilteredPendaftar] = useState(mockPendaftar); // Combobox filters internally
+  const [pendaftarOptions, setPendaftarOptions] = useState<{ value: string; label: string }[]>([]);
   const [nextNomorDU, setNextNomorDU] = useState('DU-1'); // TODO: Fetch next number from DB
+
+  useEffect(() => {
+    // TODO: Fetch actual pendaftar data
+    // For now, map mock data to Combobox options format
+    const options = mockPendaftar.map(p => ({
+      value: p.id,
+      label: `${p.id} - ${p.nama} (${p.sekolah})`,
+    }));
+    setPendaftarOptions(options);
+  }, []);
+
 
   useEffect(() => {
     // TODO: Fetch actual next DU number
@@ -90,7 +97,7 @@ export default function InputDaftarUlangPage() {
   const form = useForm<z.infer<typeof daftarUlangSchema>>({
     resolver: zodResolver(daftarUlangSchema),
     defaultValues: {
-      pendaftarId: undefined,
+      pendaftarId: '', // Initialize as empty string for Combobox
       nomorDaftarUlang: nextNomorDU,
       kelengkapanKK: false,
       kelengkapanSKL: false,
@@ -113,17 +120,17 @@ export default function InputDaftarUlangPage() {
    }, [nextNomorDU, form]);
 
 
-  // Filter logic for pendaftar dropdown
-  useEffect(() => {
-    const lowerCaseSearch = searchTerm.toLowerCase();
-    setFilteredPendaftar(
-      mockPendaftar.filter(p =>
-        p.nama.toLowerCase().includes(lowerCaseSearch) ||
-        p.id.toLowerCase().includes(lowerCaseSearch) ||
-        p.sekolah.toLowerCase().includes(lowerCaseSearch)
-      )
-    );
-  }, [searchTerm]);
+  // Filter logic for pendaftar dropdown (No longer needed as Combobox handles filtering)
+  // useEffect(() => {
+  //   const lowerCaseSearch = searchTerm.toLowerCase();
+  //   setFilteredPendaftar(
+  //     mockPendaftar.filter(p =>
+  //       p.nama.toLowerCase().includes(lowerCaseSearch) ||
+  //       p.id.toLowerCase().includes(lowerCaseSearch) ||
+  //       p.sekolah.toLowerCase().includes(lowerCaseSearch)
+  //     )
+  //   );
+  // }, [searchTerm]);
 
   // Watch bayarDaftarUlang to toggle biaya field visibility/requirement
   const watchBayarDaftarUlang = form.watch('bayarDaftarUlang');
@@ -152,7 +159,7 @@ export default function InputDaftarUlangPage() {
         setNextNomorDU(newNextNum); // Update state for the next form load
         form.reset({ // Reset form with the new DU number and today's date
             ...form.getValues(), // Keep other potential defaults if needed
-            pendaftarId: undefined, // Clear selection
+            pendaftarId: '', // Clear selection
             nomorDaftarUlang: newNextNum,
             kelengkapanKK: false,
             kelengkapanSKL: false,
@@ -167,7 +174,7 @@ export default function InputDaftarUlangPage() {
             seragamOlahraga: false,
             tanggalDaftarUlang: new Date(),
         });
-        setSearchTerm(''); // Clear search term
+        // setSearchTerm(''); // Clear search term - No longer needed
     } catch (error) {
         toast({
             title: "Gagal!",
@@ -189,42 +196,23 @@ export default function InputDaftarUlangPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              {/* Pendaftar Searchable Select */}
+              {/* Pendaftar Searchable Combobox */}
               <FormField
                 control={form.control}
                 name="pendaftarId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Pilih Pendaftar</FormLabel>
-                     <Select
-                       onValueChange={field.onChange}
-                       defaultValue={field.value}
-                     >
-                      <FormControl>
-                         {/* Consider using a Combobox component for better search UX */}
-                         <SelectTrigger>
-                           <SelectValue placeholder="Cari No. Pendaftaran / Nama / Sekolah Asal..." />
-                         </SelectTrigger>
-                       </FormControl>
-                       <SelectContent>
-                        {/* // TODO: Implement search input within the Popover/SelectContent */}
-                        {/* <Input
-                            placeholder="Ketik untuk mencari..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="mb-2"
-                         /> */}
-                         {filteredPendaftar.length > 0 ? (
-                            filteredPendaftar.map(p => (
-                              <SelectItem key={p.id} value={p.id}>
-                                {p.id} - {p.nama} ({p.sekolah})
-                              </SelectItem>
-                            ))
-                         ) : (
-                            <div className="p-2 text-center text-sm text-muted-foreground">Tidak ada hasil.</div>
-                         )}
-                       </SelectContent>
-                     </Select>
+                     <FormControl>
+                        <Combobox
+                            options={pendaftarOptions}
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Cari No. Pend / Nama / Sekolah..."
+                            searchPlaceholder="Ketik untuk mencari..."
+                            emptyPlaceholder="Pendaftar tidak ditemukan."
+                            />
+                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -367,23 +355,25 @@ export default function InputDaftarUlangPage() {
                    render={({ field }) => (
                      <FormItem>
                        <FormLabel>Ukuran Seragam</FormLabel>
-                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                          <FormControl>
-                           <SelectTrigger>
-                             <SelectValue placeholder="Pilih Ukuran" />
-                           </SelectTrigger>
+                             {/* Using RadioGroup for single selection */}
+                             <RadioGroup
+                                onValueChange={field.onChange}
+                                value={field.value}
+                                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
+                              >
+                                {['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'Custom'].map(size => (
+                                   <FormItem key={size} className="flex items-center space-x-3 space-y-0">
+                                     <FormControl>
+                                       <RadioGroupItem value={size} />
+                                     </FormControl>
+                                     <FormLabel className="font-normal">
+                                         {size === 'Custom' ? 'Custom (Ukuran Sendiri)' : size}
+                                     </FormLabel>
+                                   </FormItem>
+                                ))}
+                              </RadioGroup>
                          </FormControl>
-                         <SelectContent>
-                           <SelectItem value="S">S</SelectItem>
-                           <SelectItem value="M">M</SelectItem>
-                           <SelectItem value="L">L</SelectItem>
-                           <SelectItem value="XL">XL</SelectItem>
-                           <SelectItem value="XXL">XXL</SelectItem>
-                           <SelectItem value="3XL">3XL</SelectItem>
-                           <SelectItem value="4XL">4XL</SelectItem>
-                           <SelectItem value="Custom">Custom (Ukuran Sendiri)</SelectItem>
-                         </SelectContent>
-                       </Select>
                        <FormMessage />
                      </FormItem>
                    )}
