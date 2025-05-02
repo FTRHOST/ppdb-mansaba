@@ -1,4 +1,3 @@
-
 'use client';
 
 import type React from 'react';
@@ -32,7 +31,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { CalendarIcon, User, Home, Users, Building, PenSquare, GraduationCap, Info } from 'lucide-react';
+import { CalendarIcon, User, Home, Users, Building, PenSquare, GraduationCap, Info, MapPin, UserCheck, BookOpen, Lightbulb, FileText, HeartHandshake } from 'lucide-react'; // Added more icons
 import { format, parse } from 'date-fns';
 import { id } from 'date-fns/locale'; // Import Indonesian locale
 import { cn } from '@/lib/utils';
@@ -250,8 +249,8 @@ export default function FormPendaftaranPage() {
 
   return (
     <div className="container mx-auto py-12 px-4">
-      <Card className="max-w-4xl mx-auto shadow-xl border-primary/20">
-        <CardHeader className="bg-gradient-to-br from-primary/80 via-primary to-primary/90 p-6 rounded-t-lg border-b border-primary/30 text-primary-foreground">
+      <Card className="max-w-4xl mx-auto shadow-xl border-primary/20 overflow-hidden">
+        <CardHeader className="bg-gradient-to-br from-primary/80 via-primary to-primary/90 p-6 border-b border-primary/30 text-primary-foreground">
           <div className="flex items-center justify-center gap-3 mb-2">
              <GraduationCap className="w-10 h-10" />
               <CardTitle className="text-2xl md:text-3xl font-bold text-center tracking-tight">
@@ -268,15 +267,18 @@ export default function FormPendaftaranPage() {
               Silakan isi formulir ini dengan data yang benar dan lengkap.
             </p>
         </CardHeader>
-        <CardContent className="p-6 md:p-8">
+        <CardContent className="p-0 md:p-0"> {/* Remove default padding */}
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0"> {/* Remove global spacing */}
 
               {/* Section: Informasi Pendaftaran */}
-              <section className="space-y-6 p-6 border rounded-lg border-secondary bg-background shadow-sm relative">
-                 <h3 className="text-xl font-semibold text-primary mb-6 flex items-center gap-2 border-b pb-3">
-                    <Info className="w-6 h-6" /> Informasi Pendaftaran
-                 </h3>
+              <Card className="rounded-none border-none shadow-none">
+                <CardHeader className="bg-secondary/30 p-4 border-b">
+                    <CardTitle className="text-xl font-semibold text-primary flex items-center gap-2">
+                        <Info className="w-6 h-6" /> Informasi Pendaftaran
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
                  <FormField
                    control={form.control}
                    name="rekomendasiPendaftaran"
@@ -338,14 +340,18 @@ export default function FormPendaftaranPage() {
                       )}
                     />
                  </div>
-              </section>
+                </CardContent>
+              </Card>
 
 
               {/* Section: DATA PESERTA DIDIK */}
-              <section className="space-y-6 p-6 border rounded-lg border-secondary bg-background shadow-sm relative">
-                 <h3 className="text-xl font-semibold text-primary mb-6 flex items-center gap-2 border-b pb-3">
-                    <User className="w-6 h-6" /> Data Peserta Didik
-                 </h3>
+               <Card className="rounded-none border-none shadow-none">
+                 <CardHeader className="bg-secondary/30 p-4 border-b border-t">
+                   <CardTitle className="text-xl font-semibold text-primary flex items-center gap-2">
+                     <User className="w-6 h-6" /> Data Peserta Didik
+                   </CardTitle>
+                 </CardHeader>
+                 <CardContent className="p-6 space-y-6">
                  <p className="text-sm text-muted-foreground -mt-4 mb-6">Silakan isi data Peserta Didik sesuai dengan data di ijazah SMP/MTs.</p>
                  <FormField
                    control={form.control}
@@ -469,13 +475,17 @@ export default function FormPendaftaranPage() {
                       </FormItem>
                     )}
                   />
-              </section>
+                 </CardContent>
+               </Card>
 
               {/* Section: DATA ALAMAT */}
-              <section className="space-y-6 p-6 border rounded-lg border-secondary bg-background shadow-sm relative">
-                <h3 className="text-xl font-semibold text-primary mb-6 flex items-center gap-2 border-b pb-3">
-                    <Home className="w-6 h-6" /> Data Alamat Tempat Tinggal
-                 </h3>
+              <Card className="rounded-none border-none shadow-none">
+                 <CardHeader className="bg-secondary/30 p-4 border-b border-t">
+                    <CardTitle className="text-xl font-semibold text-primary flex items-center gap-2">
+                        <MapPin className="w-6 h-6" /> Data Alamat Tempat Tinggal
+                    </CardTitle>
+                 </CardHeader>
+                 <CardContent className="p-6 space-y-6">
                  <FormField
                    control={form.control}
                    name="tinggal"
@@ -534,7 +544,7 @@ export default function FormPendaftaranPage() {
                       <FormItem>
                         <FormLabel>RT</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="Contoh: 01" {...field} />
+                          <Input type="number" placeholder="Contoh: 1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -547,7 +557,7 @@ export default function FormPendaftaranPage() {
                       <FormItem>
                         <FormLabel>RW</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="Contoh: 02" {...field} />
+                          <Input type="number" placeholder="Contoh: 2" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -601,14 +611,18 @@ export default function FormPendaftaranPage() {
                       <Textarea value={alamatLengkap} readOnly disabled className="bg-muted/50" rows={2} />
                     </FormControl>
                  </FormItem>
-              </section>
+                 </CardContent>
+              </Card>
 
 
               {/* Section: DATA ORANG TUA */}
-               <section className="space-y-6 p-6 border rounded-lg border-secondary bg-background shadow-sm relative">
-                 <h3 className="text-xl font-semibold text-primary mb-6 flex items-center gap-2 border-b pb-3">
-                   <Users className="w-6 h-6" /> Data Orang Tua (Kandung)
-                 </h3>
+               <Card className="rounded-none border-none shadow-none">
+                 <CardHeader className="bg-secondary/30 p-4 border-b border-t">
+                    <CardTitle className="text-xl font-semibold text-primary flex items-center gap-2">
+                       <Users className="w-6 h-6" /> Data Orang Tua (Kandung)
+                    </CardTitle>
+                 </CardHeader>
+                 <CardContent className="p-6 space-y-6">
                  {/* Ayah */}
                  <div className="space-y-6 border-b pb-6 mb-6 border-dashed">
                     <h4 className="font-medium text-lg text-primary/90">Data Ayah</h4>
@@ -804,14 +818,18 @@ export default function FormPendaftaranPage() {
                       )}
                     />
                  </div>
-               </section>
+                 </CardContent>
+               </Card>
 
               {/* Section: DATA WALI (Conditional) */}
                {tinggalDenganWali && (
-                  <section className="space-y-6 p-6 border rounded-lg border-secondary bg-background shadow-sm relative transition-all duration-300 ease-in-out">
-                    <h3 className="text-xl font-semibold text-primary mb-6 flex items-center gap-2 border-b pb-3">
-                       <User className="w-6 h-6" /> Data Wali
-                    </h3>
+                 <Card className="rounded-none border-none shadow-none">
+                    <CardHeader className="bg-secondary/30 p-4 border-b border-t">
+                        <CardTitle className="text-xl font-semibold text-primary flex items-center gap-2">
+                           <UserCheck className="w-6 h-6" /> Data Wali
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6 space-y-6">
                     <p className="text-sm text-muted-foreground -mt-4 mb-6">Silakan isi data Wali jika siswa tinggal bersama Wali.</p>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField
@@ -910,14 +928,18 @@ export default function FormPendaftaranPage() {
                         </FormItem>
                       )}
                     />
-                  </section>
+                    </CardContent>
+                  </Card>
                )}
 
               {/* Section: SEKOLAH ASAL & LAINNYA */}
-              <section className="space-y-6 p-6 border rounded-lg border-secondary bg-background shadow-sm relative">
-                 <h3 className="text-xl font-semibold text-primary mb-6 flex items-center gap-2 border-b pb-3">
-                    <Building className="w-6 h-6" /> Data Sekolah Asal & Lainnya
-                 </h3>
+              <Card className="rounded-none border-none shadow-none">
+                 <CardHeader className="bg-secondary/30 p-4 border-b border-t">
+                    <CardTitle className="text-xl font-semibold text-primary flex items-center gap-2">
+                        <Building className="w-6 h-6" /> Data Sekolah Asal & Lainnya
+                    </CardTitle>
+                 </CardHeader>
+                 <CardContent className="p-6 space-y-6">
                  <FormField
                    control={form.control}
                    name="namaSekolahAsal"
@@ -1006,10 +1028,11 @@ export default function FormPendaftaranPage() {
                      </FormItem>
                    )}
                  />
-              </section>
+                 </CardContent>
+              </Card>
 
 
-              <div className="flex justify-center mt-10">
+              <div className="flex justify-center p-6 mt-0 bg-background border-t"> {/* Add padding back for the button */}
                  <Button type="submit" size="lg" className="w-full md:w-1/2 bg-accent text-accent-foreground hover:bg-accent/90 text-lg font-semibold shadow-md transform hover:scale-105 transition-transform duration-200" disabled={form.formState.isSubmitting}>
                     <PenSquare className="mr-2 h-5 w-5" />
                     {form.formState.isSubmitting ? 'Mengirim Data...' : 'Kirim Pendaftaran Saya'}
