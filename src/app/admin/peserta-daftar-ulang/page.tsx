@@ -29,7 +29,7 @@ import { id } from 'date-fns/locale'; // Import Indonesian locale
 import { toast } from '@/hooks/use-toast';
 
 // Mock data structure - adjust based on actual daftar ulang data
-interface PesertaDaftarUlang {
+export interface PesertaDaftarUlang {
   id: number; // Unique DB ID for daftar ulang record
   pendaftarId: number; // Link to Pendaftar table
   nomorPendaftaran: string;
@@ -83,13 +83,8 @@ export default function PesertaDaftarUlangPage() {
 
   const handleEditDaftarUlang = (id: number) => {
     console.log('Navigating to edit daftar ulang page for ID:', id);
-    // TODO: Implement the actual edit page `/admin/edit-daftar-ulang/[id]`
-    // router.push(`/admin/edit-daftar-ulang/${id}`);
-    toast({
-      title: "Fitur Belum Tersedia",
-      description: `Halaman edit untuk daftar ulang ID ${id} belum diimplementasikan.`,
-      variant: "default",
-    });
+    // Navigate to the edit page, passing the Daftar Ulang ID
+    router.push(`/admin/edit-daftar-ulang/${id}`);
   };
 
  const handleExportExcel = () => {
