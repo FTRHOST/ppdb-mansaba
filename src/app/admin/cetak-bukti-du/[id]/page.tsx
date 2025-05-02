@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
+import { toast } from '@/hooks/use-toast'; // Import toast
 
 // Mock data structure - Combine Pendaftar and DaftarUlang data
 interface CombinedData {
@@ -156,9 +157,14 @@ const CetakBuktiDUPage = () => {
       const styles = Array.from(document.styleSheets)
          .map(styleSheet => {
            try {
-             return Array.from(styleSheet.cssRules)
-               .map(rule => rule.cssText)
-               .join('');
+             // Only include styles from the current domain or relative paths
+             // This avoids errors with external stylesheets (like Google Fonts)
+             if (!styleSheet.href || styleSheet.href.startsWith(window.location.origin) || styleSheet.href.startsWith('/')) {
+               return Array.from(styleSheet.cssRules)
+                 .map(rule => rule.cssText)
+                 .join('');
+             }
+             return '';
            } catch (e) {
              console.warn('Could not read CSS rules from stylesheet:', styleSheet.href, e);
              return '';
@@ -167,7 +173,7 @@ const CetakBuktiDUPage = () => {
          .join('\n');
        console.log('Collected styles for print window.');
 
-      const printWindow = window.open('', '', 'height=600,width=800'); // Use landscape-like size
+      const printWindow = window.open('', '', 'height=800,width=1000'); // Adjust size slightly for F4 ratio if needed
       if (printWindow) {
           console.log('Print window opened successfully.');
          printWindow.document.write('<html><head><title>');
@@ -178,7 +184,14 @@ const CetakBuktiDUPage = () => {
           // Add print-specific styles
           printWindow.document.write(`
             @media print {
-              @page { size: A4 landscape; margin: 5mm; } /* Reduced margin */
+              /* Attempt to define F4 size (might not be universally supported) */
+              /* F4 approx 215.9mm x 330.2mm */
+              @page {
+                 size: 215.9mm 330.2mm; /* F4 dimensions */
+                 /* Alternatively, try 'legal landscape' if F4 dimensions don't work reliably */
+                 /* size: legal landscape; */
+                 margin: 5mm;
+              }
               body {
                  -webkit-print-color-adjust: exact;
                  print-color-adjust: exact;
@@ -203,14 +216,16 @@ const CetakBuktiDUPage = () => {
               }
               .receipt-container {
                  flex: 1;
-                 max-width: calc(50% - 2.5mm); /* Adjust width considering gap */
+                 /* Adjust max-width slightly if needed for F4, but 50% minus gap should still work */
+                 max-width: calc(50% - 2.5mm);
                  border: 1px solid black;
-                 padding: 2mm; /* Reduced padding */
+                 padding: 3mm; /* Slightly increased padding for better spacing on F4 */
                  box-sizing: border-box;
                  height: auto; /* Let height adjust */
                  overflow: hidden;
               }
 
+              /* --- KEEP EXISTING OVERRIDES FOR FONT SIZES, MARGINS, PADDINGS --- */
               /* Override Tailwind/Component styles for print */
               .receipt-container .text-xs { font-size: 8pt !important; line-height: 1.1 !important; }
               .receipt-container .text-sm { font-size: 9pt !important; line-height: 1.1 !important; }
@@ -246,10 +261,10 @@ const CetakBuktiDUPage = () => {
               .receipt-container .h-2 { height: 5pt !important; }
               .receipt-container .w-24 { width: 60pt !important; } /* Adjust label width */
               .receipt-container .w-20 { width: 50pt !important; }
-              .receipt-container .text-\[9px\] { font-size: 7pt !important; } /* Adjust specific font sizes */
-              .receipt-container .text-\[10pt\] { font-size: 10pt !important; }
-              .receipt-container .text-\[8pt\] { font-size: 8pt !important; }
-              .receipt-container .text-\[7pt\] { font-size: 7pt !important; }
+              .receipt-container .text-\\[9px\\] { font-size: 7pt !important; } /* Adjust specific font sizes */
+              .receipt-container .text-\\[10pt\\] { font-size: 10pt !important; }
+              .receipt-container .text-\\[8pt\\] { font-size: 8pt !important; }
+              .receipt-container .text-\\[7pt\\] { font-size: 7pt !important; }
 
 
               /* Ensure break-inside-avoid works if needed */
@@ -269,14 +284,20 @@ const CetakBuktiDUPage = () => {
             console.log('Executing print command.');
             printWindow.print();
             console.log('Closing print window.');
+            // Keep the window open for a bit longer for debugging/viewing if needed
+            // setTimeout(() => printWindow.close(), 2000);
             printWindow.close();
-          }, 250);
+          }, 500); // Increased delay slightly
 
          console.log('Restoring original document title.');
          document.title = originalTitle; // Restore original title
       } else {
         console.error('Failed to open print window. Pop-up might be blocked.');
-        alert('Gagal membuka jendela cetak. Mohon izinkan pop-up untuk situs ini.');
+        toast({
+           title: "Gagal Membuka Jendela Cetak",
+           description: "Browser Anda mungkin memblokir pop-up. Mohon izinkan pop-up untuk situs ini.",
+           variant: "destructive",
+        });
       }
    } else {
        console.error('Print content ref is null.');
@@ -300,11 +321,12 @@ const CetakBuktiDUPage = () => {
        {/* Button is hidden in print view */}
        <div className="mb-4 text-center no-print">
          <Button onClick={handlePrint} >
-           <Printer className="mr-2 h-4 w-4" /> Cetak Bukti (Landscape)
+           <Printer className="mr-2 h-4 w-4" /> Cetak Bukti (Landscape F4)
          </Button>
        </div>
       {/* This div is what gets printed */}
-      <div ref={printRef}>
+      {/* Adjusted width for better preview on screen before printing */}
+      <div ref={printRef} className="max-w-[95%] mx-auto md:max-w-[1000px] print:max-w-full">
         {/* The BuktiDaftarUlangPrint component now handles the flex layout for print */}
         <BuktiDaftarUlangPrint data={data} />
       </div>
