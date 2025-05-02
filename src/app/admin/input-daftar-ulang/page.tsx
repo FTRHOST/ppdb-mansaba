@@ -16,6 +16,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'; // Import Select components
 import { Combobox } from '@/components/ui/combobox'; // Import Combobox
 import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
@@ -40,6 +47,16 @@ const mockPendaftar = [
   { id: 'A-2526/0004', nama: 'Dewi Anggraini', sekolah: 'SMP Islam Terpadu' },
 ];
 
+// Define options for Biaya Daftar Ulang
+const biayaOptions = [
+  { value: 100000, label: 'Rp 100.000' },
+  { value: 200000, label: 'Rp 200.000' },
+  { value: 300000, label: 'Rp 300.000' },
+  { value: 400000, label: 'Rp 400.000' },
+  { value: 500000, label: 'Rp 500.000' },
+  // Add other specific amounts if needed
+];
+
 const daftarUlangSchema = z.object({
   pendaftarId: z.string({ required_error: 'Siswa pendaftar harus dipilih.' }).min(1, 'Siswa pendaftar harus dipilih.'),
   nomorDaftarUlang: z.string(), // Readonly, generated automatically
@@ -48,7 +65,7 @@ const daftarUlangSchema = z.object({
   kelengkapanPiagam: z.boolean().optional(), // Optional based on form pendaftaran
   kelengkapanSKTM: z.boolean().optional(), // Optional
   bayarDaftarUlang: z.boolean().default(false),
-  biayaDaftarUlang: z.number().optional(),
+  biayaDaftarUlang: z.number().optional(), // Keep as number, handle conversion in Select
   ukuranSeragam: z.enum(['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', 'Custom'], { required_error: 'Ukuran seragam harus dipilih.' }),
   seragamOsis: z.boolean().default(false),
   seragamPramuka: z.boolean().default(false),
@@ -56,24 +73,22 @@ const daftarUlangSchema = z.object({
   seragamOlahraga: z.boolean().default(false),
   tanggalDaftarUlang: z.date(), // Readonly, set to today
 }).refine(data => {
+  // If payment is checked, a valid amount must be selected (i.e., not undefined and > 0)
   if (data.bayarDaftarUlang && (data.biayaDaftarUlang === undefined || data.biayaDaftarUlang <= 0)) {
     return false;
   }
   return true;
 }, {
-  message: 'Biaya daftar ulang harus diisi jika pembayaran dicentang.',
+  message: 'Jumlah biaya daftar ulang harus dipilih jika pembayaran dicentang.',
   path: ['biayaDaftarUlang'],
 });
 
 export default function InputDaftarUlangPage() {
-  // const [searchTerm, setSearchTerm] = useState(''); // No longer needed for Combobox internal search
-  // const [filteredPendaftar, setFilteredPendaftar] = useState(mockPendaftar); // Combobox filters internally
   const [pendaftarOptions, setPendaftarOptions] = useState<{ value: string; label: string }[]>([]);
   const [nextNomorDU, setNextNomorDU] = useState('DU-1'); // TODO: Fetch next number from DB
 
   useEffect(() => {
     // TODO: Fetch actual pendaftar data
-    // For now, map mock data to Combobox options format
     const options = mockPendaftar.map(p => ({
       value: p.id,
       label: `${p.id} - ${p.nama} (${p.sekolah})`,
@@ -84,9 +99,7 @@ export default function InputDaftarUlangPage() {
 
   useEffect(() => {
     // TODO: Fetch actual next DU number
-    // For now, simulate fetching
     const fetchNextNumber = async () => {
-        // Replace with actual API call
         await new Promise(resolve => setTimeout(resolve, 50)); // Simulate delay
         const lastNumber = 3; // Assume last number is 3 from DB
         setNextNomorDU(`DU-${lastNumber + 1}`);
@@ -105,7 +118,7 @@ export default function InputDaftarUlangPage() {
       kelengkapanPiagam: false,
       kelengkapanSKTM: false,
       bayarDaftarUlang: false,
-      biayaDaftarUlang: undefined,
+      biayaDaftarUlang: undefined, // Initialize as undefined for Select
       ukuranSeragam: undefined,
       seragamOsis: false,
       seragamPramuka: false,
@@ -121,24 +134,13 @@ export default function InputDaftarUlangPage() {
    }, [nextNomorDU, form]);
 
 
-  // Filter logic for pendaftar dropdown (No longer needed as Combobox handles filtering)
-  // useEffect(() => {
-  //   const lowerCaseSearch = searchTerm.toLowerCase();
-  //   setFilteredPendaftar(
-  //     mockPendaftar.filter(p =>
-  //       p.nama.toLowerCase().includes(lowerCaseSearch) ||
-  //       p.id.toLowerCase().includes(lowerCaseSearch) ||
-  //       p.sekolah.toLowerCase().includes(lowerCaseSearch)
-  //     )
-  //   );
-  // }, [searchTerm]);
-
   // Watch bayarDaftarUlang to toggle biaya field visibility/requirement
   const watchBayarDaftarUlang = form.watch('bayarDaftarUlang');
 
   async function onSubmit(values: z.infer<typeof daftarUlangSchema>) {
      const dataToSubmit = {
       ...values,
+      // Biaya is already a number or undefined due to Select onValueChange handling
       biayaDaftarUlang: values.bayarDaftarUlang ? values.biayaDaftarUlang : null, // Set null if not paid
       tanggalDaftarUlang: format(values.tanggalDaftarUlang, 'yyyy-MM-dd'), // Format date for DB
     };
@@ -167,7 +169,7 @@ export default function InputDaftarUlangPage() {
             kelengkapanPiagam: false,
             kelengkapanSKTM: false,
             bayarDaftarUlang: false,
-            biayaDaftarUlang: undefined,
+            biayaDaftarUlang: undefined, // Reset biaya
             ukuranSeragam: undefined,
             seragamOsis: false,
             seragamPramuka: false,
@@ -175,7 +177,6 @@ export default function InputDaftarUlangPage() {
             seragamOlahraga: false,
             tanggalDaftarUlang: new Date(),
         });
-        // setSearchTerm(''); // Clear search term - No longer needed
     } catch (error) {
         toast({
             title: "Gagal!",
@@ -331,15 +332,32 @@ export default function InputDaftarUlangPage() {
                        render={({ field }) => (
                          <FormItem>
                            <FormLabel>Jumlah Biaya Daftar Ulang</FormLabel>
-                           <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="Masukkan jumlah pembayaran"
-                                {...field}
-                                value={field.value ?? ''} // Handle undefined for input value
-                                onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))} // Convert to number or undefined
-                              />
-                           </FormControl>
+                           <Select
+                             // Convert the number value to string for Select comparison
+                             value={field.value !== undefined ? String(field.value) : undefined}
+                             // Convert the selected string back to number for the form state
+                             onValueChange={(value) => field.onChange(value ? Number(value) : undefined)}
+                             disabled={!watchBayarDaftarUlang} // Disable if checkbox is not checked
+                           >
+                             <FormControl>
+                               <SelectTrigger>
+                                 <SelectValue placeholder="Pilih jumlah biaya" />
+                               </SelectTrigger>
+                             </FormControl>
+                             <SelectContent>
+                               {biayaOptions.map((option) => (
+                                 <SelectItem key={option.value} value={String(option.value)}>
+                                   {option.label}
+                                 </SelectItem>
+                               ))}
+                               {/* Optionally add an "Other" or custom input if needed */}
+                               {/* <SelectItem value="custom">Lainnya...</SelectItem> */}
+                             </SelectContent>
+                           </Select>
+                           {/* If 'custom' is selected, you might show an Input field */}
+                           {/* {field.value === 'custom' && (
+                             <Input type="number" placeholder="Masukkan jumlah custom" ... />
+                           )} */}
                            <FormMessage />
                          </FormItem>
                        )}
