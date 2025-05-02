@@ -1,8 +1,8 @@
-
 'use client';
 
 import type React from 'react';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // Import useRouter
 import {
   Table,
   TableBody,
@@ -26,6 +26,7 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale'; // Import Indonesian locale
+import { toast } from '@/hooks/use-toast';
 
 // Mock data structure - adjust based on actual daftar ulang data
 interface PesertaDaftarUlang {
@@ -50,6 +51,7 @@ export default function PesertaDaftarUlangPage() {
   const [peserta, setPeserta] = useState<PesertaDaftarUlang[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const router = useRouter(); // Initialize useRouter
 
   // Simulate data fetching
   useEffect(() => {
@@ -64,34 +66,44 @@ export default function PesertaDaftarUlangPage() {
   }, []);
 
   const handlePrintBukti = (daftarUlangId: number) => {
-    console.log('Print Bukti Clicked for Daftar Ulang ID:', daftarUlangId);
-    // Open the print page in a new tab/window, passing the DAFTAR ULANG ID
+    console.log('Opening print bukti for Daftar Ulang ID:', daftarUlangId);
     const printUrl = `/admin/cetak-bukti-du/${daftarUlangId}`;
-    console.log('Attempting to open URL:', printUrl);
     const newWindow = window.open(printUrl, '_blank', 'noopener,noreferrer');
-    if (newWindow) {
-        console.log('New window opened successfully.');
+    if (!newWindow) {
+      console.error('Failed to open new window. Check pop-up blocker.');
+      toast({
+        title: "Gagal Membuka Halaman Cetak",
+        description: "Browser Anda mungkin memblokir pop-up. Mohon izinkan pop-up untuk situs ini.",
+        variant: "destructive",
+      });
     } else {
-        console.error('Failed to open new window. Check pop-up blocker.');
-        alert('Gagal membuka halaman cetak. Mohon izinkan pop-up untuk situs ini.');
+         console.log('Print window opened successfully.');
     }
   };
 
   const handleEditDaftarUlang = (id: number) => {
-    // TODO: Implement edit daftar ulang logic (e.g., navigate to edit page or open modal)
-    console.log('Edit daftar ulang for ID:', id);
-    // Example: router.push(`/admin/edit-daftar-ulang/${id}`);
-     alert('Fitur edit daftar ulang belum diimplementasikan.');
+    console.log('Navigating to edit daftar ulang page for ID:', id);
+    // TODO: Implement the actual edit page `/admin/edit-daftar-ulang/[id]`
+    // router.push(`/admin/edit-daftar-ulang/${id}`);
+    toast({
+      title: "Fitur Belum Tersedia",
+      description: `Halaman edit untuk daftar ulang ID ${id} belum diimplementasikan.`,
+      variant: "default",
+    });
   };
 
  const handleExportExcel = () => {
     // TODO: Implement Excel export logic
     console.log('Exporting to Excel...');
-    alert('Fitur export Excel belum diimplementasikan.');
+     toast({
+         title: "Fitur Belum Tersedia",
+         description: "Fitur export data peserta daftar ulang ke Excel belum diimplementasikan.",
+         variant: "default",
+     });
   };
 
    const handlePrintTable = () => {
-     // TODO: Implement table print logic
+     // TODO: Implement better table print logic if needed
      console.log('Printing table...');
      window.print(); // Basic browser print
    };
@@ -102,6 +114,22 @@ export default function PesertaDaftarUlangPage() {
     item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.sekolahAsal.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Function to safely parse date and format, handling invalid dates
+   const formatDateSafe = (dateString: string): string => {
+      try {
+        const date = new Date(dateString);
+        // Check if the date is valid
+        if (isNaN(date.getTime())) {
+          return 'Tanggal Invalid';
+        }
+        return format(date, 'dd MMMM yyyy', { locale: id });
+      } catch (error) {
+        console.error("Error formatting date:", dateString, error);
+        return 'Error Tanggal';
+      }
+    };
+
 
   return (
     <div className="space-y-6">
@@ -160,7 +188,7 @@ export default function PesertaDaftarUlangPage() {
                       <TableCell>{item.nomorPendaftaran}</TableCell>
                       <TableCell>{item.nama}</TableCell>
                       <TableCell>{item.sekolahAsal}</TableCell>
-                      <TableCell>{format(new Date(item.tanggalDaftarUlang), 'dd MMMM yyyy', { locale: id })}</TableCell>
+                      <TableCell>{formatDateSafe(item.tanggalDaftarUlang)}</TableCell>
                       <TableCell>{item.ukuranSeragam}</TableCell>
                       <TableCell className="text-right">
                          <DropdownMenu>
@@ -176,7 +204,8 @@ export default function PesertaDaftarUlangPage() {
                                <Edit className="mr-2 h-4 w-4" />
                                <span>Edit Daftar Ulang</span>
                              </DropdownMenuItem>
-                             <DropdownMenuItem onClick={() => handlePrintBukti(item.id)}> {/* Pass Daftar Ulang ID */}
+                             {/* Correctly wire the onClick handler */}
+                             <DropdownMenuItem onClick={() => handlePrintBukti(item.id)}>
                                <Printer className="mr-2 h-4 w-4" />
                                <span>Cetak Bukti</span>
                              </DropdownMenuItem>
