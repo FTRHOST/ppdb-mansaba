@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react'; // Import useRef
 import Image from 'next/image'; // Use next/image for optimization if the logo is hosted
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
@@ -74,6 +74,9 @@ const DataRow: React.FC<{ label: string; value?: string | null }> = ({ label, va
 
 
 export const FormulirPendaftaranPrint: React.FC<{ data: FormulirData }> = ({ data }) => {
+   // Correct place for hooks
+   const printRef = useRef<HTMLDivElement>(null); // Correctly place useRef inside the component
+
    // Format tanggal daftar if available
    const formattedTanggalDaftar = data.tanggalDaftar
      ? format(data.tanggalDaftar, 'dd MMMM yyyy', { locale: localeId })
@@ -81,12 +84,12 @@ export const FormulirPendaftaranPrint: React.FC<{ data: FormulirData }> = ({ dat
    const tempatDaftar = data.kabupaten || 'Banyuputih'; // Use kabupaten or default
 
    return (
-     <div className="bg-white p-4 max-w-4xl mx-auto border border-gray-300 text-xs print:border-none print:shadow-none print:p-0">
+     <div ref={printRef} className="bg-white p-4 max-w-4xl mx-auto border border-gray-300 text-xs print:border-none print:shadow-none print:p-0">
        {/* Header */}
        <div className="text-center mb-4 border-b-2 border-black pb-2">
            <div className="flex justify-center items-center mb-1">
                 {/* Placeholder for logo - replace with actual Image component if URL available */}
-                <div className="w-16 h-16 bg-gray-200 flex items-center justify-center mr-4 rounded-full overflow-hidden">
+                <div className="w-16 h-16 bg-gray-200 flex items-center justify-center mr-4 rounded-full overflow-hidden" data-ai-hint="school logo">
                     {/* <Image src="/path/to/logo.png" alt="Logo MA NU 01 Banyuputih" width={64} height={64} /> */}
                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 text-green-700">
                         <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.522c0 .318.218.594.5.707A9.735 9.735 0 0 0 6 21a9.707 9.707 0 0 0 5.25-1.533v-1.42a.75.75 0 0 0-.657-.744A8.202 8.202 0 0 1 6 18a8.235 8.235 0 0 1-2.25-.37v-1.42a.75.75 0 0 1 .657-.744A8.21 8.21 0 0 0 6 15c2.086 0 3.981-.782 5.378-2.067a.75.75 0 0 0 1.122-.56v-1.42a.75.75 0 0 0-.5-.707 8.21 8.21 0 0 0-1.721-.486.75.75 0 0 0-.657.744v1.42h-.001c-1.431.925-3.312 1.483-5.323 1.483a8.235 8.235 0 0 1-2.25-.37V7.5a8.21 8.21 0 0 0 1.721-.486.75.75 0 0 1 .657.744v1.42c0 .274.11.523.294.706A8.21 8.21 0 0 0 6 10.5c2.086 0 3.981-.782 5.378-2.067a.75.75 0 0 1 1.122-.56v-1.42a.75.75 0 0 1 .5-.707c.157-.054.316-.1.477-.143a.75.75 0 0 0 .6-.89Z" />
