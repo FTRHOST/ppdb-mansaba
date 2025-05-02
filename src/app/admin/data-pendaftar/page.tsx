@@ -61,16 +61,19 @@ export default function DataPendaftarPage() {
     fetchData();
   }, []);
 
-  const handlePrintFormulir = (id: number) => {
-    // TODO: Implement print formulir logic
-    console.log('Cetak formulir for ID:', id);
-    alert('Fitur cetak formulir belum diimplementasikan.');
+  const handlePrintFormulir = (id: number, nomorPendaftaran: string) => {
+    console.log('Opening print formulir for ID:', id, ' Nomor:', nomorPendaftaran);
+    // Open the print page in a new tab/window
+    // Pass the DB ID as the identifier
+    const printUrl = `/admin/cetak-formulir/${id}`;
+    window.open(printUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleEditPendaftar = (id: number) => {
     // TODO: Implement edit pendaftar logic (e.g., navigate to edit page or open modal)
     console.log('Edit pendaftar for ID:', id);
     alert('Fitur edit pendaftar belum diimplementasikan.');
+    // Example: router.push(`/admin/edit-pendaftar/${id}`);
   };
 
   const handleExportExcel = () => {
@@ -83,7 +86,7 @@ export default function DataPendaftarPage() {
      // TODO: Implement table print logic
      console.log('Printing table...');
      window.print(); // Basic browser print
-     alert('Fitur cetak tabel (lebih canggih) belum diimplementasikan.');
+     // Consider using a library for better table printing if needed
    };
 
 
@@ -164,7 +167,7 @@ export default function DataPendaftarPage() {
                               <Edit className="mr-2 h-4 w-4" />
                               <span>Edit Data</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handlePrintFormulir(item.id)}>
+                            <DropdownMenuItem onClick={() => handlePrintFormulir(item.id, item.nomorPendaftaran)}>
                               <Printer className="mr-2 h-4 w-4" />
                               <span>Cetak Formulir</span>
                             </DropdownMenuItem>
