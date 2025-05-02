@@ -63,10 +63,11 @@ export default function PesertaDaftarUlangPage() {
     fetchData();
   }, []);
 
-  const handlePrintBukti = (id: number) => {
-    // TODO: Implement print bukti daftar ulang logic
-    console.log('Cetak bukti for daftar ulang ID:', id);
-    alert('Fitur cetak bukti daftar ulang belum diimplementasikan.');
+  const handlePrintBukti = (daftarUlangId: number) => {
+    console.log('Opening print bukti for daftar ulang ID:', daftarUlangId);
+    // Open the print page in a new tab/window, passing the DAFTAR ULANG ID
+    const printUrl = `/admin/cetak-bukti-du/${daftarUlangId}`;
+    window.open(printUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleEditDaftarUlang = (id: number) => {
@@ -168,7 +169,7 @@ export default function PesertaDaftarUlangPage() {
                                <Edit className="mr-2 h-4 w-4" />
                                <span>Edit Daftar Ulang</span>
                              </DropdownMenuItem>
-                             <DropdownMenuItem onClick={() => handlePrintBukti(item.id)}>
+                             <DropdownMenuItem onClick={() => handlePrintBukti(item.id)}> {/* Pass Daftar Ulang ID */}
                                <Printer className="mr-2 h-4 w-4" />
                                <span>Cetak Bukti</span>
                              </DropdownMenuItem>
@@ -193,4 +194,3 @@ export default function PesertaDaftarUlangPage() {
     </div>
   );
 }
-
