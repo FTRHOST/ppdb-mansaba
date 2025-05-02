@@ -53,7 +53,8 @@ const formSchema = z.object({
   tinggal: z.enum(['Bersama Orang tua', 'Bersama Wali', 'Bersama Kakak', 'Tinggal Sendiri', 'Lainnya'], { required_error: 'Pilihan tinggal harus dipilih.' }),
   dukuhJalan: z.string().min(1, { message: 'Dukuh/Jalan harus diisi.' }),
   desa: z.string().min(1, { message: 'Desa harus diisi.' }),
-  rtRw: z.string().min(3, { message: 'RT/RW harus diisi (contoh: 01/02).' }).regex(/^\d{1,2}\/\d{1,2}$/, { message: 'Format RT/RW tidak valid (contoh: 01/02).' }),
+  rt: z.string().min(1, { message: 'RT harus diisi.' }).regex(/^\d+$/, { message: 'RT hanya boleh berisi angka.' }),
+  rw: z.string().min(1, { message: 'RW harus diisi.' }).regex(/^\d+$/, { message: 'RW hanya boleh berisi angka.' }),
   kecamatan: z.string().min(1, { message: 'Kecamatan harus diisi.' }),
   kabupaten: z.string().min(1, { message: 'Kabupaten harus diisi.' }),
   provinsi: z.string().min(1, { message: 'Provinsi harus diisi.' }),
@@ -106,7 +107,8 @@ export default function FormPendaftaranPage() {
       tinggal: undefined,
       dukuhJalan: '',
       desa: '',
-      rtRw: '',
+      rt: '',
+      rw: '',
       kecamatan: '',
       kabupaten: '',
       provinsi: '',
@@ -143,7 +145,8 @@ export default function FormPendaftaranPage() {
   const watchedTanggalLahir = form.watch('tanggalLahir');
   const watchedDukuhJalan = form.watch('dukuhJalan');
   const watchedDesa = form.watch('desa');
-  const watchedRtRw = form.watch('rtRw');
+  const watchedRt = form.watch('rt');
+  const watchedRw = form.watch('rw');
   const watchedKecamatan = form.watch('kecamatan');
   const watchedKabupaten = form.watch('kabupaten');
   const watchedProvinsi = form.watch('provinsi');
@@ -167,16 +170,18 @@ export default function FormPendaftaranPage() {
 
   // Effect for Alamat Lengkap
   useEffect(() => {
+    const rtRwString = (watchedRt && watchedRw) ? `RT ${watchedRt.padStart(3, '0')} / RW ${watchedRw.padStart(3, '0')}` : '';
     const parts = [
       watchedDukuhJalan,
       watchedDesa,
-      watchedRtRw ? `RT/RW ${watchedRtRw}` : '',
+      rtRwString,
       watchedKecamatan ? `Kec. ${watchedKecamatan}` : '',
       watchedKabupaten ? `Kab. ${watchedKabupaten}` : '',
       watchedProvinsi ? `Prov. ${watchedProvinsi}` : '',
     ];
     setAlamatLengkap(parts.filter(Boolean).join(', '));
-  }, [watchedDukuhJalan, watchedDesa, watchedRtRw, watchedKecamatan, watchedKabupaten, watchedProvinsi]);
+  }, [watchedDukuhJalan, watchedDesa, watchedRt, watchedRw, watchedKecamatan, watchedKabupaten, watchedProvinsi]);
+
 
   // Effect to show/hide Wali section
   useEffect(() => {
@@ -404,7 +409,7 @@ export default function FormPendaftaranPage() {
                                     )}
                                   >
                                     {field.value ? (
-                                      format(field.value, "dd MMMM yyyy", { locale: id }) // Updated format
+                                      format(field.value, "dd MMMM yyyy", { locale: id }) // Format: 29 April 2025
                                     ) : (
                                       <span>Pilih tanggal</span>
                                     )}
@@ -507,18 +512,33 @@ export default function FormPendaftaranPage() {
                   />
                    <FormField
                     control={form.control}
-                    name="rtRw"
+                    name="rt"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>RT / RW</FormLabel>
+                        <FormLabel>RT</FormLabel>
                         <FormControl>
-                          <Input placeholder="Contoh: 01/02" {...field} />
+                          <Input type="number" placeholder="Contoh: 01" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                    <FormField
+                    control={form.control}
+                    name="rw"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>RW</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="Contoh: 02" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
                     control={form.control}
                     name="kecamatan"
                     render={({ field }) => (
@@ -531,8 +551,6 @@ export default function FormPendaftaranPage() {
                       </FormItem>
                     )}
                   />
-                </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="kabupaten"
@@ -563,7 +581,7 @@ export default function FormPendaftaranPage() {
                   <FormItem>
                     <FormLabel>Alamat Lengkap (Otomatis)</FormLabel>
                     <FormControl>
-                      <Textarea value={alamatLengkap} readOnly disabled className="bg-muted/50" />
+                      <Textarea value={alamatLengkap} readOnly disabled className="bg-muted/50" rows={2} />
                     </FormControl>
                  </FormItem>
               </div>
@@ -969,4 +987,3 @@ export default function FormPendaftaranPage() {
     </div>
   );
 }
-
