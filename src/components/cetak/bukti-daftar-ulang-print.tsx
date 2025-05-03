@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -72,7 +73,7 @@ const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean; namaPet
     return (
       // Use flex column, ensure height fills container for footer push
       <div className={cn(
-          "receipt-container bg-white p-2 max-w-full print:max-w-none print:p-[4mm] mx-auto text-xs font-sans break-inside-avoid print:text-[9pt] print:leading-normal flex flex-col h-full", // Removed border from here
+          "receipt-container bg-white p-2 max-w-full print:max-w-none print:p-[4mm] mx-auto text-xs font-sans break-inside-avoid print:text-[9pt] print:leading-normal flex flex-col h-full", // Removed border from here, added h-full
           isArsip ? "border-t-4 border-t-red-600" : ""
       )}>
         {/* Header - Replace SVG with Image */}
@@ -128,8 +129,8 @@ const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean; namaPet
              </div>
              {/* Info Box - Moved below checklist */}
              <div className={cn(
-                 "border border-black p-1 text-center text-[8pt] leading-tight print:text-[7pt] print:my-1 print:p-1 small-print bg-gray-100 print:bg-gray-100", // Removed explicit margin-top
-                  !isArsip ? 'mt-2' : '' // Add margin top only if not Arsip copy
+                 "border border-black p-1.5 text-center text-[8pt] leading-tight print:text-[7pt] print:p-1 small-print bg-gray-100 print:bg-gray-100 mt-1 mb-1", // Adjusted padding and margins
+                 isArsip ? 'h-8 print:h-8' : '' // Keep height for Arsip or let content dictate for non-arsip
               )}>
                   {!isArsip ? (
                       <>
@@ -137,8 +138,8 @@ const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean; namaPet
                           Info keberangkatan pertama akan di informasikan di grup Whatsapp Siswa Baru 2025
                       </>
                   ) : (
-                     // Keep the box for layout consistency, maybe add a placeholder or just height
-                      <div className="h-8 print:h-8"></div> // Or adjust height as needed
+                      // Keep the box for layout consistency, maybe add a placeholder or just height
+                      <div className="h-8 print:h-8"></div> // Adjust height as needed or remove if spacing is enough
                   )}
               </div>
           </div>
@@ -166,19 +167,18 @@ const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean; namaPet
 export const BuktiDaftarUlangPrint: React.FC<{ data: BuktiDaftarUlangData }> = ({ data }) => {
     // Pass the namaPetugas from data to both Receipt components
     return (
-       // Use flex layout for side-by-side printing, ensure equal width
-       <div className="print-container flex flex-col md:flex-row gap-4 print:flex print:flex-row print:gap-[10mm]">
+       // Use flex layout for side-by-side printing, ensure equal width and height
+       <div className="print-container flex flex-col md:flex-row gap-4 print:flex print:flex-row print:gap-[10mm] h-full">
           {/* Copy 1: For Student */}
-          <div className="receipt-outer-wrapper"> {/* Added wrapper with border */}
+          <div className="receipt-outer-wrapper h-full"> {/* Added wrapper with border and h-full */}
              <Receipt data={data} namaPetugas={data.namaPetugas} />
           </div>
 
           {/* Copy 2: For Arsip */}
-           <div className="receipt-outer-wrapper"> {/* Added wrapper with border */}
+           <div className="receipt-outer-wrapper h-full"> {/* Added wrapper with border and h-full */}
               <Receipt data={data} isArsip={true} namaPetugas={data.namaPetugas} />
            </div>
        </div>
     );
   };
 
-    

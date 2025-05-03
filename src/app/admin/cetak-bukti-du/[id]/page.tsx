@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -120,7 +121,7 @@ const CetakBuktiDUPageContent = () => {
         }
       };
 
-       if (daftarUlangId && !authLoading) {
+       if (daftarUlangId && !authLoading && isClient) { // Ensure client-side and auth is ready
            fetchData();
        } else if (!daftarUlangId) {
            setError('ID Daftar Ulang tidak valid.');
@@ -181,8 +182,8 @@ const CetakBuktiDUPageContent = () => {
                line-height: 1.4; /* Increased line-height for less cramped text */
                -webkit-print-color-adjust: exact !important; /* Force color printing */
                print-color-adjust: exact !important;
-               width: 100%;
-               height: calc(210mm - 2cm); /* Full printable height */
+               width: 100%; /* Ensure body takes full width */
+               height: 100%; /* Ensure body takes full height */
                display: flex; /* Use flexbox for centering */
                justify-content: center; /* Center horizontally */
                align-items: center; /* Center vertically */
@@ -197,8 +198,7 @@ const CetakBuktiDUPageContent = () => {
                 align-items: flex-start !important; /* Align items at the top */
                 gap: 10mm !important; /* Gap between the two receipts */
                 width: calc(330mm - 2cm); /* Full printable width adjusted for margins */
-                height: auto; /* Let content determine height */
-                max-height: calc(210mm - 2cm); /* Max height is printable area */
+                height: calc(210mm - 2cm); /* Full printable height adjusted for margins */
                 padding: 0 !important;
                 border: none !important;
                 box-shadow: none !important;
@@ -264,14 +264,14 @@ const CetakBuktiDUPageContent = () => {
               .receipt-container .bg-transparent { background-color: transparent !important; }
 
              /* Adjust Footer Box */
-             .receipt-container .border.border-black.p-1\\.5.mt-2.mb-1 { /* Adjusted margin here */
+             .receipt-container .border.border-black.p-1\\.5.mt-1.mb-1 { /* Adjusted margins */
                 border-width: 1px !important;
                 border-color: black !important;
-                padding: 2mm !important; /* Increased padding */
+                padding: 1.5mm !important; /* Adjust padding */
                 background-color: #f3f4f6 !important; /* Light gray background */
                 print-color-adjust: exact !important; /* Ensure background prints */
-                margin-top: 3mm !important; /* Increased top margin */
-                margin-bottom: 2mm !important; /* Increased bottom margin */
+                margin-top: 2mm !important; /* Reduced top margin */
+                margin-bottom: 2mm !important; /* Added bottom margin */
                 line-height: 1.3 !important;
              }
              .receipt-container .text-\\[8pt\\] { font-size: 8pt !important; } /* Adjusted font size */
@@ -428,7 +428,7 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
      useEffect(() => {
         if (!isClient || authLoading) return; // Wait for client and auth check
 
-        if (!user) {
+        if (!user && !pathname?.startsWith('/login')) { // Redirect if not user and not on login page
             console.log("AuthCheck: User not authenticated, redirecting from", pathname);
             const redirectUrl = `/login?redirect=${encodeURIComponent(pathname)}`;
             router.push(redirectUrl);
@@ -444,7 +444,7 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
          );
      }
 
-    return <>{user ? children : null}</>; // Render children only if user exists after loading and client-side check
+    return <>{user || pathname?.startsWith('/login') ? children : null}</>; // Render children if user exists or on login page
 };
 
 
@@ -458,3 +458,4 @@ const CetakBuktiDUPage = () => {
 };
 
 export default CetakBuktiDUPage;
+
