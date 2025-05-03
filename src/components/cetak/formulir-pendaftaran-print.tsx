@@ -86,8 +86,9 @@ export const FormulirPendaftaranPrint: React.FC<{ data: FormulirData }> = ({ dat
    const [isClient, setIsClient] = useState(false);
 
    useEffect(() => {
-       setIsClient(true);
-       const storedUri = localStorage.getItem('customLetterheadUri');
+       setIsClient(true); // Mark as client-side
+       const storedUri = localStorage.getItem('customLetterheadUri'); // Key matches settings page
+       console.log("FormulirPrint: Loaded letterhead URI from localStorage:", storedUri); // Debug log
        if (storedUri) {
            setLetterheadUri(storedUri);
        }
@@ -95,8 +96,8 @@ export const FormulirPendaftaranPrint: React.FC<{ data: FormulirData }> = ({ dat
 
    // Render header based on client state and letterhead availability
    const renderHeader = () => {
-       // Default text header for SSR/initial render to prevent hydration mismatch
-       if (!isClient) {
+       // Default text header for SSR/initial render or if no custom letterhead
+       if (!isClient || !letterheadUri) {
            return (
               <div className="text-center py-2 mb-1 border-b-2 border-black pb-1">
                  <h1 className="text-sm font-bold">PANITIA PENDAFTARAN PESERTA DIDIK BARU</h1>
@@ -106,28 +107,17 @@ export const FormulirPendaftaranPrint: React.FC<{ data: FormulirData }> = ({ dat
               </div>
            );
        }
-       // On client-side, render image if URI exists, otherwise default text
-       if (letterheadUri) {
-           return (
-              <div className="mb-1 border-b-2 border-black pb-1 print:mb-1 print:pb-1">
-                 <Image
-                    src={letterheadUri}
-                    alt="Kop Surat MA NU 01 Banyuputih"
-                    width={794} // Approx F4 width in pixels for reference
-                    height={150} // Adjust height as needed
-                    className="w-full h-auto object-contain"
-                    priority
-                 />
-               </div>
-           );
-       }
-       // Default Fallback if no custom URI on client
+       // On client-side, render image if URI exists
        return (
-           <div className="text-center mb-1 border-b-2 border-black pb-1">
-                <h1 className="text-sm font-bold">PANITIA PENDAFTARAN PESERTA DIDIK BARU</h1>
-                <h2 className="text-lg font-bold text-primary">MA NU 01 BANYUPUTIH</h2>
-                <h3 className="text-sm font-bold">TAHUN PELAJARAN 2025/2026</h3>
-                <p className="text-xs">Jl. Lapangan 9a Banyuputih Kec. Banyuputih Kab. Batang</p>
+          <div className="mb-1 border-b-2 border-black pb-1 print:mb-1 print:pb-1">
+             <Image
+                src={letterheadUri}
+                alt="Kop Surat MA NU 01 Banyuputih"
+                width={794} // Approx F4 width in pixels for reference
+                height={150} // Adjust height as needed
+                className="w-full h-auto object-contain"
+                priority // Load image eagerly for printing
+             />
            </div>
        );
    };
