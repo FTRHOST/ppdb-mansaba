@@ -111,7 +111,6 @@ const steps = [
 
 export default function FormPendaftaranPage() {
   const [currentStep, setCurrentStep] = useState(0);
-  // const [isClient, setIsClient] = useState(false); // State to track client-side rendering - No longer needed for main loading
   const [mounted, setMounted] = useState(false); // State to track component mount for effects
 
   const form = useForm<FormSchemaType>({
@@ -158,8 +157,9 @@ export default function FormPendaftaranPage() {
   });
 
   // Initialize derived states with empty strings or appropriate defaults
-  const [tempatTanggalLahir, setTempatTanggalLahir] = useState('');
-  const [alamatLengkap, setAlamatLengkap] = useState('');
+  // Initialize derived states with null or appropriate defaults to avoid hydration mismatch
+  const [tempatTanggalLahir, setTempatTanggalLahir] = useState<string | null>(null);
+  const [alamatLengkap, setAlamatLengkap] = useState<string | null>(null);
 
   // Watch form fields to update derived values
   const watchedTempatLahir = form.watch('tempatLahir');
@@ -175,7 +175,6 @@ export default function FormPendaftaranPage() {
 
   // Effect to signal mount completion
   useEffect(() => {
-    // setIsClient(true); // No longer needed for main loading
     setMounted(true); // Signal that the component has mounted for effects
   }, []);
 
@@ -321,7 +320,7 @@ export default function FormPendaftaranPage() {
 
   const CurrentStepIcon = mounted ? steps[currentStep]?.icon || Info : Loader2; // Use Loader while not mounted
 
-  // Removed the conditional rendering block for `!mounted`
+  // Loading state render removed to avoid hydration issues
 
   return (
     <div className="container mx-auto py-12 px-4">
@@ -507,7 +506,8 @@ export default function FormPendaftaranPage() {
                                             !field.value && "text-muted-foreground"
                                           )}
                                         >
-                                          {field.value && mounted ? ( // Check mounted state here
+                                          {/* Render placeholder initially, format date only after mount */}
+                                          {field.value && mounted ? (
                                             format(field.value, "dd MMMM yyyy", { locale: localeId })
                                           ) : (
                                             <span>Pilih tanggal</span>
@@ -538,7 +538,8 @@ export default function FormPendaftaranPage() {
                           <FormItem>
                             <FormLabel>Tempat, Tanggal Lahir (Otomatis)</FormLabel>
                             <FormControl>
-                              <Input value={mounted ? tempatTanggalLahir : 'Memuat...'} readOnly disabled className="bg-muted/50" />
+                              {/* Render placeholder initially, show derived value only after mount */}
+                              <Input value={mounted ? (tempatTanggalLahir ?? 'Memuat...') : 'Memuat...'} readOnly disabled className="bg-muted/50" />
                             </FormControl>
                           </FormItem>
                           <FormField
@@ -680,7 +681,8 @@ export default function FormPendaftaranPage() {
                           <FormItem>
                             <FormLabel>Alamat Lengkap (Otomatis)</FormLabel>
                             <FormControl>
-                              <Textarea value={mounted ? alamatLengkap : 'Memuat...'} readOnly disabled className="bg-muted/50" rows={2} />
+                              {/* Render placeholder initially, show derived value only after mount */}
+                              <Textarea value={mounted ? (alamatLengkap ?? 'Memuat...') : 'Memuat...'} readOnly disabled className="bg-muted/50" rows={2} />
                             </FormControl>
                           </FormItem>
                          </>
