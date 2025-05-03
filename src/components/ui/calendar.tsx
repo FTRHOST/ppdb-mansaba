@@ -2,10 +2,11 @@
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { DayPicker } from "react-day-picker"
+import { DayPicker, DropdownProps } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select" // Import Select components
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
@@ -23,7 +24,9 @@ function Calendar({
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
+        // Remove default label, using dropdowns instead
+        caption_label: "hidden",
+        caption_dropdowns: "flex gap-1 items-center", // Container for dropdowns
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
@@ -46,7 +49,7 @@ function Calendar({
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
         day_today: "bg-accent text-accent-foreground",
         day_outside:
-          "day-outside text-muted-foreground aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
+          "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
         day_disabled: "text-muted-foreground opacity-50",
         day_range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
@@ -54,6 +57,49 @@ function Calendar({
         ...classNames,
       }}
       components={{
+        Dropdown: (dropdownProps: DropdownProps) => {
+           const { fromMonth, fromYear, toMonth, toYear } = dropdownProps;
+           const { name, value, onChange } = dropdownProps.options;
+            const options =
+               name === 'months'
+                 ? dropdownProps.options.props.children
+                 : dropdownProps.options.props.children;
+
+             if (!options || !Array.isArray(options)) {
+                 console.error("Dropdown options are not valid:", options);
+                 return null; // Or return a fallback UI
+             }
+
+           return (
+             <Select
+               value={String(value)}
+               onValueChange={(newValue) => {
+                 if (onChange) {
+                     // Find the selected option element to simulate the change event
+                     const selectedOption = options.find(
+                         (opt: React.ReactElement<HTMLOptionElement>) => String(opt.props.value) === newValue
+                     );
+                     if (selectedOption) {
+                         // Simulate event object expected by react-day-picker's handler
+                         const simulatedEvent = { target: { value: newValue } } as unknown as React.ChangeEvent<HTMLSelectElement>;
+                         onChange(simulatedEvent);
+                     }
+                 }
+               }}
+             >
+               <SelectTrigger className="h-7 w-auto px-2 text-xs font-medium [&>span]:line-clamp-1">
+                 <SelectValue />
+               </SelectTrigger>
+               <SelectContent className="max-h-60">
+                 {options.map((option: React.ReactElement<HTMLOptionElement>, i: number) => (
+                   <SelectItem key={`${name}-${i}`} value={String(option.props.value)}>
+                     {option.props.children}
+                   </SelectItem>
+                 ))}
+               </SelectContent>
+             </Select>
+           );
+         },
         IconLeft: ({ className, ...props }) => (
           <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
         ),

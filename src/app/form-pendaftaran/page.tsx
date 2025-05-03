@@ -527,9 +527,9 @@ export default function FormPendaftaranPage() {
                                     onSelect={field.onChange}
                                     locale={id}
                                     disabled={(date) => date > new Date() || date < new Date("1990-01-01")}
-                                    captionLayout="dropdown-buttons"
-                                    fromYear={1990}
-                                    toYear={new Date().getFullYear()}
+                                    captionLayout="dropdown-buttons" // Use dropdowns for month/year
+                                    fromYear={1990} // Start year for dropdown
+                                    toYear={new Date().getFullYear()} // End year for dropdown
                                     initialFocus
                                   />
                                 </PopoverContent>
