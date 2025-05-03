@@ -166,8 +166,8 @@ const CetakBuktiDUPageContent = () => {
              console.log('Collected styles for print window.');
          } catch (e) { console.error("Error collecting styles:", e); }
 
-         // Updated printSpecificStyles for F4 Landscape (330mm x 210mm) with 1cm margin
-         const printSpecificStyles = `
+          // Updated printSpecificStyles for F4 Landscape (330mm x 210mm) with 1cm margin
+          const printSpecificStyles = `
            @media print {
              @page {
                size: 330mm 210mm; /* F4 Landscape */
@@ -178,11 +178,14 @@ const CetakBuktiDUPageContent = () => {
                padding: 0;
                font-family: Arial, sans-serif; /* Use a common sans-serif font */
                font-size: 9pt; /* Base font size */
-               line-height: 1.2;
+               line-height: 1.4; /* Increased line-height for less cramped text */
                -webkit-print-color-adjust: exact !important; /* Force color printing */
                print-color-adjust: exact !important;
                width: 100%;
-               height: 100%; /* Ensure body takes full printable height */
+               height: calc(210mm - 2cm); /* Full printable height */
+               display: flex; /* Use flexbox for centering */
+               justify-content: center; /* Center horizontally */
+               align-items: center; /* Center vertically */
                background-color: white !important; /* Ensure white background for print */
              }
              .no-print { display: none !important; }
@@ -190,64 +193,65 @@ const CetakBuktiDUPageContent = () => {
              .print-container {
                 display: flex !important;
                 flex-direction: row !important; /* Side by side */
-                justify-content: space-between !important;
+                justify-content: space-between !important; /* Space out receipts */
                 align-items: flex-start !important; /* Align items at the top */
                 gap: 10mm !important; /* Gap between the two receipts */
-                width: calc(330mm - 2cm); /* Full printable width */
-                height: calc(210mm - 2cm); /* Full printable height */
+                width: calc(330mm - 2cm); /* Full printable width adjusted for margins */
+                height: auto; /* Let content determine height */
+                max-height: calc(210mm - 2cm); /* Max height is printable area */
                 padding: 0 !important;
                 border: none !important;
                 box-shadow: none !important;
                 box-sizing: border-box !important;
-                /* Remove overflow hidden for print? */
              }
              /* Style for each individual receipt wrapper */
              .receipt-outer-wrapper {
                  width: calc(( (330mm - 2cm) - 10mm) / 2); /* (Printable Width - Gap) / 2 */
-                 height: 100% !important; /* Make wrapper take full calculated height */
+                 height: 100% !important; /* Make wrapper take full height */
                  border: 1px solid black !important; /* Add border to the wrapper */
                  box-sizing: border-box !important;
                  display: flex !important; /* Use flex here */
                  flex-direction: column !important; /* Stack header/content/footer vertically */
                  page-break-inside: avoid !important; /* Try to prevent breaking inside wrapper */
                  overflow: hidden; /* Hide overflow within the bordered box */
+                 background-color: white !important;
              }
              /* Style for the content inside the wrapper */
              .receipt-container {
-                 padding: 4mm !important; /* Apply padding inside the border */
+                 padding: 5mm !important; /* Slightly increased padding inside the border */
                  box-sizing: border-box !important;
                  width: 100% !important;
                  height: 100% !important; /* Occupy full height of wrapper */
                  display: flex !important;
                  flex-direction: column !important; /* Stack vertically */
                  font-size: 9pt !important;
-                 line-height: 1.2 !important;
+                 line-height: 1.4 !important; /* Increased line height */
                  border: none !important; /* No border on inner container */
                  page-break-inside: avoid !important;
                  background-color: white !important;
              }
              /* Ensure content grows and footer sticks to bottom */
              .receipt-content { flex-grow: 1 !important; } /* Allow content to take available space */
-             .receipt-footer { margin-top: auto !important; padding-top: 2mm !important; flex-shrink: 0 !important; } /* Push footer to bottom */
+             .receipt-footer { margin-top: auto !important; padding-top: 3mm !important; flex-shrink: 0 !important; } /* Push footer to bottom */
 
              /* Fine-tune spacing and font sizes based on the reference image */
-             .receipt-container h1, .receipt-container h2, .receipt-container h3 { margin-bottom: 1mm; line-height: 1.1; font-weight: bold; }
-             .receipt-container .text-xs { font-size: 9pt !important; line-height: 1.2 !important; }
-             .receipt-container .text-sm { font-size: 10pt !important; line-height: 1.2 !important; }
-             .receipt-container .text-base { font-size: 11pt !important; line-height: 1.2 !important; }
+             .receipt-container h1, .receipt-container h2, .receipt-container h3 { margin-bottom: 1.5mm; line-height: 1.3; font-weight: bold; }
+             .receipt-container .text-xs { font-size: 9pt !important; line-height: 1.4 !important; }
+             .receipt-container .text-sm { font-size: 10pt !important; line-height: 1.4 !important; }
+             .receipt-container .text-base { font-size: 11pt !important; line-height: 1.4 !important; }
              .receipt-container .font-bold { font-weight: bold !important; }
              .receipt-container .font-semibold { font-weight: 600 !important; }
              .receipt-container .font-medium { font-weight: 500 !important; }
              .receipt-container .underline { text-decoration: underline !important; }
 
              /* Adjust DataRow specifically */
-             .receipt-container .flex.mb-0_5 { margin-bottom: 0 !important; }
+             .receipt-container .flex.mb-0_5 { margin-bottom: 1mm !important; } /* Slightly more space */
              .receipt-container span.w-\\[100px\\] { width: 100px !important; }
              .receipt-container span.mr-2 { margin-right: 8px !important; }
 
              /* Adjust ChecklistItem */
-             .receipt-container .flex.items-center.mb-0 { margin-bottom: 0 !important; }
-             .receipt-container .w-3.h-3.mr-1 { width: 9pt !important; height: 9pt !important; margin-right: 4px !important; }
+             .receipt-container .flex.items-center.mb-0 { margin-bottom: 0.5mm !important; } /* Add slight spacing */
+             .receipt-container .w-3.h-3.mr-1 { width: 9pt !important; height: 9pt !important; margin-right: 5px !important; vertical-align: middle; } /* Increased spacing, vertical align */
              .receipt-container .text-black { color: black !important; } /* Ensure checkmark is black */
              .receipt-container .text-gray-500 { color: #6b7280 !important; } /* Ensure empty box is gray */
 
@@ -260,47 +264,66 @@ const CetakBuktiDUPageContent = () => {
               .receipt-container .bg-transparent { background-color: transparent !important; }
 
              /* Adjust Footer Box */
-             .receipt-container .border.border-black.p-1\\.5.mt-1.mb-2 { /* Adjusted margin here */
+             .receipt-container .border.border-black.p-1\\.5.mt-2.mb-1 { /* Adjusted margin here */
                 border-width: 1px !important;
                 border-color: black !important;
-                padding: 1mm !important;
+                padding: 2mm !important; /* Increased padding */
                 background-color: #f3f4f6 !important; /* Light gray background */
                 print-color-adjust: exact !important; /* Ensure background prints */
-                margin-top: 1mm !important; /* Reduce top margin */
-                margin-bottom: 1mm !important; /* Reduce bottom margin */
+                margin-top: 3mm !important; /* Increased top margin */
+                margin-bottom: 2mm !important; /* Increased bottom margin */
+                line-height: 1.3 !important;
              }
-             .receipt-container .text-\\[8pt\\] { font-size: 7pt !important; line-height: 1.1 !important; }
-             .receipt-container .small-print { font-size: 7pt !important; line-height: 1.1 !important; } /* Ensure class applies */
+             .receipt-container .text-\\[8pt\\] { font-size: 8pt !important; } /* Adjusted font size */
+             .receipt-container .small-print { font-size: 8pt !important; line-height: 1.3 !important; } /* Ensure class applies */
 
              /* Adjust Signature */
              .receipt-container .signature-space { height: 15mm !important; } /* Increased space for signature */
-             .receipt-container .receipt-signature { margin-top: 1mm !important; } /* Reduced margin above signature block */
+             .receipt-container .receipt-signature { margin-top: 2mm !important; } /* Increased margin above signature block */
            }
            /* Screen styles for preview */
            @media screen {
                body { background-color: #f3f4f6; /* Light gray background for screen */ }
+               .print-preview-container {
+                   display: flex;
+                   justify-content: center; /* Center on screen */
+                   align-items: flex-start; /* Align cards at the top */
+                   padding: 1rem;
+                   width: 100%;
+                   overflow-x: auto; /* Allow horizontal scroll if needed on small screens */
+                   min-height: 100vh; /* Ensure it takes height */
+               }
                .print-container {
-                   max-width: 1200px; /* Limit width on screen */
-                   margin: 1rem auto; /* Center on screen */
-                   align-items: flex-start; /* Align items at the top */
-                   padding: 1rem; /* Add padding for screen view */
+                   display: flex !important;
+                   flex-direction: row !important; /* Side by side */
+                   justify-content: center !important; /* Center receipts */
+                   align-items: flex-start !important; /* Align items at the top */
+                   gap: 20px !important; /* Gap between the two receipts */
+                   width: auto; /* Let content size determine width */
+                   max-width: 1200px; /* Limit max width */
                    background-color: transparent; /* Transparent background for container on screen */
-                   min-height: auto; /* Don't force page height on screen */
                }
                .receipt-outer-wrapper {
-                   flex: 1;
+                   flex: 1; /* Allow flex grow */
+                   max-width: 500px; /* Limit width of each receipt */
+                   min-width: 400px; /* Minimum width */
                    margin-bottom: 1rem; /* Space below receipts on screen */
                    background-color: white;
                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                   min-height: 200mm; /* Minimum height for better preview */
                    height: auto; /* Allow content to determine height */
-                   width: 48%; /* Approximate width for side-by-side view */
-                   overflow: visible; /* Allow content to be visible on screen */
+                   border: 1px solid #ccc !important; /* Lighter border for screen */
                }
                .receipt-container {
                     height: auto; /* Let content define height */
                     overflow: visible; /* Allow content to be visible on screen */
+                    padding: 10px !important; /* Screen padding */
+                    line-height: 1.5 !important; /* More readable line height on screen */
                }
+                .receipt-container .text-xs { font-size: 10pt !important; line-height: 1.5 !important; }
+                .receipt-container .text-sm { font-size: 11pt !important; line-height: 1.5 !important; }
+                .receipt-container .text-base { font-size: 12pt !important; line-height: 1.5 !important; }
+                .receipt-container .text-\\[8pt\\] { font-size: 9pt !important; line-height: 1.4 !important; }
+                .receipt-container .small-print { font-size: 9pt !important; line-height: 1.4 !important; }
            }
          `;
 
@@ -349,13 +372,15 @@ const CetakBuktiDUPageContent = () => {
      }
 
     if (!user) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-                <span>Mengarahkan...</span>
-            </div>
-        );
+         // This state should ideally not be reached if AuthCheck is effective
+         return (
+             <div className="flex justify-center items-center h-screen">
+                 <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+                 <span>Mengarahkan...</span>
+             </div>
+         );
     }
+
 
     if (error) {
       return <div className="flex justify-center items-center h-screen text-red-600"><p>{error}</p></div>;
@@ -370,7 +395,7 @@ const CetakBuktiDUPageContent = () => {
     }
 
     return (
-      <div className="p-4 print:p-0 min-h-screen flex flex-col">
+      <div className="p-4 print:p-0 min-h-screen flex flex-col bg-gray-100 print:bg-white">
          <div className="mb-4 flex justify-between items-center no-print max-w-6xl mx-auto w-full"> {/* Ensure controls take full width */}
              <Button variant="outline" size="sm" onClick={() => router.back()}>
                  <ArrowLeft className="mr-2 h-4 w-4" /> Kembali
@@ -379,8 +404,11 @@ const CetakBuktiDUPageContent = () => {
                  <Printer className="mr-2 h-4 w-4" /> Cetak Bukti (F4 Landscape)
              </Button>
          </div>
-        <div ref={printRef} className="print-preview-container flex-grow">
-          <BuktiDaftarUlangPrint data={data} />
+        {/* Added a wrapper div for screen preview styling */}
+        <div className="print-preview-container flex-grow">
+             <div ref={printRef} className="print-container">
+                 <BuktiDaftarUlangPrint data={data} />
+             </div>
         </div>
       </div>
     );
@@ -390,10 +418,22 @@ const CetakBuktiDUPageContent = () => {
 const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, loading: authLoading } = useAuth();
     const [isClient, setIsClient] = useState(false);
+    const router = useRouter();
+    const pathname = usePathname();
 
      useEffect(() => {
          setIsClient(true);
      }, []);
+
+     useEffect(() => {
+        if (!isClient || authLoading) return; // Wait for client and auth check
+
+        if (!user) {
+            console.log("AuthCheck: User not authenticated, redirecting from", pathname);
+            const redirectUrl = `/login?redirect=${encodeURIComponent(pathname)}`;
+            router.push(redirectUrl);
+        }
+     }, [isClient, authLoading, user, router, pathname]);
 
      if (!isClient || authLoading) {
          return (
@@ -404,7 +444,7 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
          );
      }
 
-    return <>{user ? children : null}</>; // Render children only if user exists after loading
+    return <>{user ? children : null}</>; // Render children only if user exists after loading and client-side check
 };
 
 
