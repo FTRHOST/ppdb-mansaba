@@ -9,7 +9,7 @@ import { toast } from '@/hooks/use-toast';
 interface AuthUser {
     name: string;
     username: string; // Add username
-    isAdmin: boolean;
+    isAdmin: boolean; // Flag to differentiate admin and petugas
 }
 
 // Mock Auth Hook - Replace with actual implementation using Firebase Auth or other provider
@@ -67,16 +67,15 @@ export const useAuth = () => {
 
         // Mock authentication logic
         if (username === 'admin' && password === 'password') {
-            const loggedInUser: AuthUser = { name: "Admin User", username: "admin", isAdmin: true };
-            console.log("Login successful:", loggedInUser);
+            const loggedInUser: AuthUser = { name: "Admin Utama", username: "admin", isAdmin: true };
+            console.log("Login successful (Admin):", loggedInUser);
             setUser(loggedInUser);
-            // Store user in local storage for persistence (REMOVE in real app)
             localStorage.setItem('mockUser', JSON.stringify(loggedInUser));
             setLoading(false);
             return true;
-         } else if (username === 'petugas' && password === 'password') { // Add another user for testing
-             const loggedInUser: AuthUser = { name: "Petugas Biasa", username: "petugas", isAdmin: false };
-             console.log("Login successful:", loggedInUser);
+         } else if (username === 'petugas' && password === 'password') { // Add petugas user
+             const loggedInUser: AuthUser = { name: "Petugas PPDB", username: "petugas", isAdmin: false };
+             console.log("Login successful (Petugas):", loggedInUser);
              setUser(loggedInUser);
              localStorage.setItem('mockUser', JSON.stringify(loggedInUser));
              setLoading(false);
@@ -91,7 +90,7 @@ export const useAuth = () => {
             setLoading(false);
             return false;
         }
-    }, []);
+    }, [router]); // Added router dependency to useCallback
 
     const logout = useCallback(async () => {
         setLoading(true);
