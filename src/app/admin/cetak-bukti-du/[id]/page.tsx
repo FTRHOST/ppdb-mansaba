@@ -51,14 +51,22 @@ const mockCombinedData: CombinedData[] = [
 const CetakBuktiDUPageContent = () => {
     const params = useParams();
     const router = useRouter();
-    const { user } = useAuth(); // Get the authenticated user from context
+    const { user, loading: authLoading } = useAuth(); // Get the authenticated user from context
     const daftarUlangId = params?.id ? parseInt(params.id as string, 10) : null;
     const [data, setData] = useState<BuktiDaftarUlangData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const printRef = useRef<HTMLDivElement>(null);
+    const [isClient, setIsClient] = useState(false); // State to track client-side mounting
 
     useEffect(() => {
+        setIsClient(true); // Set when component mounts on the client
+    }, []);
+
+
+    useEffect(() => {
+      if (!isClient || authLoading) return; // Don't fetch until client-side and auth is ready
+
       const fetchData = async () => {
         if (!daftarUlangId) {
           setError('ID Daftar Ulang tidak valid.');
@@ -107,8 +115,10 @@ const CetakBuktiDUPageContent = () => {
         }
       };
 
-      fetchData();
-    }, [daftarUlangId, user?.name]); // Add user.name as dependency
+      if (user) { // Fetch data only if user is authenticated
+          fetchData();
+      }
+    }, [daftarUlangId, user, authLoading, isClient]); // Add dependencies
 
    const handlePrint = () => {
      console.log('Handle Print button clicked.');
@@ -146,57 +156,62 @@ const CetakBuktiDUPageContent = () => {
              console.log('Collected styles for print window.');
          } catch (e) { console.error("Error collecting styles:", e); }
 
-         // Define F4 Landscape size in mm (8.5 x 13 inches approx 215.9mm x 330.2mm)
-         // Adjusted margins and font sizes for better F4 fit
+         // Define F4 Landscape size in mm (approx 216mm x 330mm)
+         // Adjust margins, paddings, font sizes for better F4 fit and proportion
          const printSpecificStyles = `
            @media print {
              @page {
-               size: 330.2mm 215.9mm; /* F4 Landscape */
-               margin: 10mm 10mm 5mm 10mm; /* top, right, bottom, left - Reduced bottom margin */
+               size: 330mm 216mm; /* F4 Landscape approx 13 x 8.5 inches */
+               margin: 10mm 8mm 5mm 8mm; /* top, right, bottom, left - Adjusted horizontal margins */
              }
              html, body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 9pt; line-height: 1.1; -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 100%; height: auto; }
              .no-print { display: none !important; }
              .print-container { display: flex !important; justify-content: space-between !important; align-items: flex-start !important; gap: 10mm !important; width: 100% !important; height: auto !important; padding: 0 !important; border: none !important; box-shadow: none !important; }
-             .receipt-container { flex: 1 !important; max-width: calc(50% - 5mm) !important; border: 1px solid black !important; padding: 4mm 5mm 4mm 5mm !important; /* Adjusted padding T R B L */ box-sizing: border-box !important; height: auto !important; overflow: hidden !important; break-inside: avoid !important; font-size: 9pt !important; line-height: 1.15 !important; }
+             /* Reduce max-width further to make receipts less wide */
+             .receipt-container { flex: 1 !important; max-width: calc(50% - 8mm) !important; /* Reduced width, increased space between */ border: 1px solid black !important; padding: 4mm 4mm 3mm 4mm !important; /* T R B L */ box-sizing: border-box !important; height: 100% !important; /* Let height be determined by content */ overflow: hidden !important; break-inside: avoid !important; font-size: 9pt !important; line-height: 1.1 !important; }
              .receipt-container h1, .receipt-container h2, .receipt-container h3 { margin-bottom: 1mm; line-height: 1.1; }
-             /* Adjust specific text sizes for better readability */
-             .receipt-container .text-xs { font-size: 9pt !important; line-height: 1.15 !important; }
-             .receipt-container .text-sm { font-size: 10pt !important; line-height: 1.15 !important; }
-             .receipt-container .text-base { font-size: 11pt !important; line-height: 1.15 !important; }
+             /* Specific text size adjustments */
+             .receipt-container .text-xs { font-size: 9pt !important; line-height: 1.1 !important; }
+             .receipt-container .text-sm { font-size: 10pt !important; line-height: 1.1 !important; }
+             .receipt-container .text-base { font-size: 11pt !important; line-height: 1.1 !important; }
              .receipt-container .font-bold { font-weight: bold !important; }
              .receipt-container .font-semibold { font-weight: 600 !important; }
              .receipt-container .font-medium { font-weight: 500 !important; }
-             .receipt-container .mb-0_5 { margin-bottom: 0.8mm !important; } /* Tightened default margin */
-             .receipt-container .mb-1 { margin-bottom: 1.2mm !important; }
-             .receipt-container .mt-1 { margin-top: 1.2mm !important; }
-             .receipt-container .my-1 { margin-top: 1.2mm !important; margin-bottom: 1.2mm !important; }
-             .receipt-container .pb-0_5 { padding-bottom: 0.8mm !important; }
-             .receipt-container .mr-1 { margin-right: 1.2mm !important; }
-             .receipt-container .ml-1 { margin-left: 1.2mm !important; }
-             .receipt-container .ml-2 { margin-left: 2.5mm !important; }
-             /* Adjust icon/element sizes */
-             .receipt-container .w-8 { width: 22pt !important; height: 22pt !important; }
-             .receipt-container .h-8 { height: 22pt !important; }
-             .receipt-container .w-5 { width: 14pt !important; height: 14pt !important; }
-             .receipt-container .h-5 { height: 14pt !important; }
-             .receipt-container .w-3 { width: 9pt !important; height: 9pt !important; } /* Slightly smaller checklist */
-             .receipt-container .h-3 { height: 9pt !important; }
-             .receipt-container .w-\\[70px\\] { width: 75px !important; } /* Adjusted label width */
-             .receipt-container .text-\\[9px\\] { font-size: 8pt !important; }
-             .receipt-container .text-\\[8pt\\] { font-size: 9pt !important; }
-             .receipt-container .text-\\[7pt\\] { font-size: 8pt !important; }
-             .receipt-container .signature-space { height: 5mm !important; } /* Reduced signature space height */
-             .receipt-container .small-print { font-size: 7pt !important; line-height: 1.1 !important; } /* Smaller footer box */
+             .receipt-container .mb-0_5 { margin-bottom: 0.7mm !important; } /* Tighter margin */
+             .receipt-container .mb-1 { margin-bottom: 1.0mm !important; }
+             .receipt-container .mt-1 { margin-top: 1.0mm !important; }
+             .receipt-container .my-1 { margin-top: 1.0mm !important; margin-bottom: 1.0mm !important; }
+             .receipt-container .pb-0_5 { padding-bottom: 0.7mm !important; }
+             .receipt-container .mr-1 { margin-right: 1.0mm !important; }
+             .receipt-container .ml-1 { margin-left: 1.0mm !important; }
+             .receipt-container .ml-2 { margin-left: 2.0mm !important; }
+             /* Icon/element size adjustments */
+             .receipt-container .w-8 { width: 20pt !important; height: 20pt !important; }
+             .receipt-container .h-8 { height: 20pt !important; }
+             .receipt-container .w-5 { width: 12pt !important; height: 12pt !important; }
+             .receipt-container .h-5 { height: 12pt !important; }
+             .receipt-container .w-3 { width: 8pt !important; height: 8pt !important; } /* Smaller checklist icon */
+             .receipt-container .h-3 { height: 8pt !important; }
+             .receipt-container .w-\\[70px\\] { width: 65px !important; } /* Slightly narrower label */
+             .receipt-container .text-\\[9px\\] { font-size: 7pt !important; } /* Smaller header text */
+             .receipt-container .text-\\[8pt\\] { font-size: 8pt !important; }
+             .receipt-container .text-\\[7pt\\] { font-size: 6.5pt !important; } /* Smaller footer box text */
+             .receipt-container .signature-space { height: 4mm !important; } /* Reduced signature space */
+             .receipt-container .small-print { font-size: 6.5pt !important; line-height: 1.0 !important; } /* Smaller footer box */
            }
            @media screen {
                .print-container {
-                   max-width: 1100px;
+                   max-width: 1100px; /* Keep screen width reasonable */
                    margin-left: auto;
                    margin-right: auto;
+                   align-items: stretch; /* Ensure containers take full height in flex */
                }
                 .receipt-container {
-                     height: calc(215.9mm * 0.8); /* Simulate aspect ratio */
+                    /* Simulate aspect ratio for screen view, adjust height */
+                     height: calc(216mm * 0.9); /* Adjust multiplier as needed */
                      overflow-y: auto;
+                     max-width: 500px; /* Limit width on screen */
+                     margin-bottom: 1rem; /* Add spacing on screen */
                 }
            }
          `;
@@ -222,6 +237,8 @@ const CetakBuktiDUPageContent = () => {
              } finally {
                  console.log('Restoring original document title.');
                  document.title = originalTitle;
+                 // Optionally close window after print attempt:
+                 // setTimeout(() => { if (printWindow && !printWindow.closed) printWindow.close(); }, 2000);
              }
            }, 500); // Delay to allow content rendering
 
@@ -233,8 +250,14 @@ const CetakBuktiDUPageContent = () => {
       }, 50); // Added small delay
    };
 
-    if (loading) {
-      return <div className="flex justify-center items-center h-screen"><Loader2 className="mr-2 h-8 w-8 animate-spin" /><span>Memuat data bukti daftar ulang...</span></div>;
+    // Use authLoading state for the initial loading indicator
+    if (authLoading || (loading && !error)) {
+      return (
+          <div className="flex justify-center items-center h-screen">
+              <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+              <span>Memuat data bukti daftar ulang...</span>
+          </div>
+      );
     }
 
     if (error) {
@@ -242,7 +265,12 @@ const CetakBuktiDUPageContent = () => {
     }
 
     if (!data) {
-      return <div className="flex justify-center items-center h-screen"><p>Data tidak tersedia.</p></div>;
+      // This might happen briefly if user logs out, or if fetch failed silently
+      return (
+           <div className="flex justify-center items-center h-screen">
+               <p>Data tidak tersedia atau Anda belum login.</p>
+           </div>
+      );
     }
 
     return (
@@ -270,16 +298,26 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const pathname = usePathname(); // Use usePathname hook
+    const [isClient, setIsClient] = useState(false);
+
+     useEffect(() => {
+         setIsClient(true);
+     }, []);
 
     useEffect(() => {
+         if (!isClient) return; // Don't run on server
+
         // Only redirect if not already on login page and auth check is complete
         if (!authLoading && !user && pathname !== '/login') {
             console.log("AuthCheck: Not authenticated, redirecting to login.");
-            router.push('/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
+            // Store the intended redirect path *before* navigating
+            const redirectPath = window.location.pathname + window.location.search;
+            sessionStorage.setItem('redirectAfterLogin', redirectPath); // Use sessionStorage
+            router.push('/login'); // Redirect to login
         }
-    }, [authLoading, user, router, pathname]);
+    }, [authLoading, user, router, pathname, isClient]);
 
-    if (authLoading) {
+    if (!isClient || authLoading) {
         return (
             <div className="flex justify-center items-center h-screen">
                 <Loader2 className="mr-2 h-8 w-8 animate-spin" />
