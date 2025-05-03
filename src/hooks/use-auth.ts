@@ -1,8 +1,9 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation'; // Import usePathname
 import { toast } from '@/hooks/use-toast';
 
 // Mock user data structure
@@ -26,6 +27,7 @@ export const useAuth = () => {
     const [user, setUser] = useState<AuthUser | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const pathname = usePathname(); // Get current path
 
     // Simulate fetching auth state on initial load
     useEffect(() => {
@@ -33,6 +35,7 @@ export const useAuth = () => {
         console.log("Checking auth status...");
         // Check local storage or session storage for mock login state
         const storedUser = localStorage.getItem('mockUser');
+
         if (storedUser) {
             try {
                 const parsedUser: AuthUser = JSON.parse(storedUser);
@@ -41,32 +44,38 @@ export const useAuth = () => {
                     console.log("User found in storage:", parsedUser);
                     setUser(parsedUser);
                     setLoading(false);
-                }, 500);
+                     // No redirect needed here, user is found
+                }, 100); // Reduced delay slightly
             } catch (e) {
                  console.error("Error parsing stored user:", e);
                  localStorage.removeItem('mockUser'); // Clear invalid data
                  // Simulate delay
                 setTimeout(() => {
+                     setUser(null); // Ensure user state is null
                      setLoading(false);
-                     console.log("No user found or error parsing, redirecting to login.");
-                     // Redirect if on an admin page (but not the login page itself) and not logged in
-                     if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/login')) {
+                     console.log("Error parsing, redirecting to login if necessary.");
+                     // Redirect ONLY if on an admin page (but not login page itself)
+                     if (pathname?.startsWith('/admin') && pathname !== '/login') {
                          router.push('/login');
                      }
-                 }, 500);
+                 }, 100);
             }
         } else {
-            // Simulate delay
+            // No user data found in storage
             setTimeout(() => {
+                 setUser(null); // Ensure user state is null
                  setLoading(false);
-                 console.log("No user found in storage, redirecting to login.");
-                 // Redirect if on an admin page (but not the login page itself) and not logged in
-                 if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/login')) {
+                 console.log("No user found in storage, redirecting to login if necessary.");
+                 // Redirect ONLY if on an admin page (but not login page itself)
+                 if (pathname?.startsWith('/admin') && pathname !== '/login') {
                      router.push('/login');
                  }
-            }, 500);
+            }, 100);
         }
-    }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pathname]); // Re-check auth when pathname changes (important for SPA navigation)
+    // router dependency removed to avoid potential loops on redirect
+
 
     const login = useCallback(async (username: string, password: string): Promise<boolean> => {
         setLoading(true);
@@ -123,10 +132,12 @@ export const useAuth = () => {
             description: "Username atau password salah.",
             variant: "destructive",
         });
+        setUser(null); // Ensure user state is null on failed login
+        localStorage.removeItem('mockUser'); // Clear any potentially leftover mockUser
         setLoading(false);
         return false;
 
-    }, [router]); // Added router dependency to useCallback
+    }, []); // Removed router dependency as redirect is handled after successful login
 
     const logout = useCallback(async () => {
         setLoading(true);
@@ -145,21 +156,22 @@ export const useAuth = () => {
      // Function to redirect if not authenticated (useful for protecting pages)
      const requireAuth = useCallback(() => {
         // Check if loading is complete before potentially redirecting
-        if (!loading) {
-            // Redirect if on an admin page (but not login) and not logged in
-            if (!user && typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/login')) {
+        // Also check if user state is definitively null (not just initially)
+        if (!loading && !user) {
+            // Redirect if on an admin page (but not login)
+            if (pathname?.startsWith('/admin') && pathname !== '/login') {
                 console.log("RequireAuth: Not logged in, redirecting.");
                 router.push('/login');
             } else {
-                 // Only log if not redirecting
-                 if (user || (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin'))) {
-                    console.log(`RequireAuth: Status - Logged In: ${!!user}`);
-                 }
+                 console.log(`RequireAuth: Status - Logged In: false (Path: ${pathname})`);
             }
+        } else if (!loading && user) {
+             console.log(`RequireAuth: Status - Logged In: true (User: ${user.username}, Path: ${pathname})`);
         } else {
             console.log("RequireAuth: Still loading auth state...");
         }
-    }, [loading, user, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loading, user, pathname]); // Depend on loading, user, and pathname
 
 
     // --- Placeholder Functions for Profile Management ---

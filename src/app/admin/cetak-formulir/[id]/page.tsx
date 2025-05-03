@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 // Mock data structure - Ensure this matches the data needed by FormulirPendaftaranPrint
 interface PendaftarLengkap extends FormulirData {
@@ -140,147 +142,196 @@ const mockFullData: PendaftarLengkap[] = [
    },
  ];
 
-const CetakFormulirPage = () => {
-  const params = useParams();
-  const pendaftarId = params?.id ? parseInt(params.id as string, 10) : null;
-  const [data, setData] = useState<PendaftarLengkap | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const printRef = useRef<HTMLDivElement>(null);
+const CetakFormulirPageContent = () => {
+    const params = useParams();
+    const pendaftarId = params?.id ? parseInt(params.id as string, 10) : null;
+    const [data, setData] = useState<PendaftarLengkap | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const printRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!pendaftarId) {
-        setError('ID Pendaftar tidak valid.');
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-      try {
-        // TODO: Replace with actual API call to fetch data by ID
-        console.log(`Fetching data for ID: ${pendaftarId}`);
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-        const foundData = mockFullData.find(item => item.id === pendaftarId);
-
-        if (foundData) {
-          // Add current date as tanggalCetak
-          const dataWithPrintDate: FormulirData = {
-              ...foundData,
-              tanggalCetak: format(new Date(), 'dd MMMM yyyy', { locale: localeId })
-          };
-          setData(dataWithPrintDate as PendaftarLengkap);
-
-          // Automatically trigger print dialog after data loads
-          setTimeout(() => {
-             handlePrint();
-          }, 100); // Short delay to ensure rendering
-
-        } else {
-          setError(`Data pendaftar dengan ID ${pendaftarId} tidak ditemukan.`);
+    useEffect(() => {
+      const fetchData = async () => {
+        if (!pendaftarId) {
+          setError('ID Pendaftar tidak valid.');
+          setLoading(false);
+          return;
         }
-      } catch (err) {
-        console.error('Error fetching pendaftar data:', err);
-        setError('Gagal memuat data pendaftar.');
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchData();
-  }, [pendaftarId]);
+        setLoading(true);
+        setError(null);
+        try {
+          // TODO: Replace with actual API call to fetch data by ID
+          console.log(`Fetching data for ID: ${pendaftarId}`);
+          await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+          const foundData = mockFullData.find(item => item.id === pendaftarId);
 
- const handlePrint = () => {
-   const printContent = printRef.current;
-   if (printContent) {
-      const originalTitle = document.title;
-      document.title = `Formulir Pendaftaran - ${data?.nama || pendaftarId}`; // Set title for print window
+          if (foundData) {
+            // Add current date as tanggalCetak
+            const dataWithPrintDate: FormulirData = {
+                ...foundData,
+                tanggalCetak: format(new Date(), 'dd MMMM yyyy', { locale: localeId })
+            };
+            setData(dataWithPrintDate as PendaftarLengkap);
 
-      const styles = Array.from(document.styleSheets)
-         .map(styleSheet => {
-           try {
-             return Array.from(styleSheet.cssRules)
-               .map(rule => rule.cssText)
-               .join('');
-           } catch (e) {
-             console.warn('Could not read CSS rules from stylesheet:', styleSheet.href, e);
-             return '';
-           }
-         })
-         .join('\n');
+            // Automatically trigger print dialog after data loads
+            // Using setTimeout to potentially avoid issues with rapid DOM changes and print triggering
+            setTimeout(() => {
+               handlePrint();
+            }, 500); // Increased delay slightly
 
-      const printWindow = window.open('', '', 'height=800,width=800');
-      if (printWindow) {
-         printWindow.document.write('<html><head><title>');
-         printWindow.document.write(document.title);
-         printWindow.document.write('</title>');
-          // Inject Tailwind/Global styles and specific print styles
-         printWindow.document.write('<style>');
-         printWindow.document.write(styles);
-          // Add print-specific styles from the component if needed, or directly here
-          printWindow.document.write(`
-            @media print {
-              @page { size: A4; margin: 15mm; } /* Adjust margins as needed */
-              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-              .no-print { display: none !important; }
-              /* Add other print specific styles here */
-               .print-container { /* Ensure container takes full width */
-                 width: 100%;
-                 max-width: 100%;
-                 margin: 0;
-                 padding: 0;
-                 border: none;
-                 box-shadow: none;
-              }
-            }
-          `);
-         printWindow.document.write('</style>');
-         printWindow.document.write('</head><body>');
-         printWindow.document.write(printContent.innerHTML);
-         printWindow.document.write('</body></html>');
-         printWindow.document.close();
-         printWindow.focus();
+          } else {
+            setError(`Data pendaftar dengan ID ${pendaftarId} tidak ditemukan.`);
+          }
+        } catch (err) {
+          console.error('Error fetching pendaftar data:', err);
+          setError('Gagal memuat data pendaftar.');
+        } finally {
+          setLoading(false);
+        }
+      };
 
-         // Delay print command slightly to ensure content is loaded
-          setTimeout(() => {
-            printWindow.print();
-            printWindow.close();
-          }, 250);
+      fetchData();
+    }, [pendaftarId]);
 
-         document.title = originalTitle; // Restore original title
-      } else {
-        alert('Gagal membuka jendela cetak. Mohon izinkan pop-up untuk situs ini.');
-      }
-   }
- };
+   const handlePrint = () => {
+     const printContent = printRef.current;
+     if (printContent) {
+       // Use a timeout to allow potential state updates before opening print window
+       setTimeout(() => {
+          const originalTitle = document.title;
+          document.title = `Formulir Pendaftaran - ${data?.nama || pendaftarId}`; // Set title for print window
 
-  if (loading) {
-    return <div className="flex justify-center items-center h-screen"><p>Memuat data formulir...</p></div>;
-  }
+          let styles = '';
+          try {
+              styles = Array.from(document.styleSheets)
+                 .map(styleSheet => {
+                   try {
+                    if (!styleSheet.href || styleSheet.href.startsWith(window.location.origin) || styleSheet.href.startsWith('/')) {
+                        return Array.from(styleSheet.cssRules)
+                            .map(rule => rule.cssText)
+                            .join('');
+                    }
+                    return '';
+                   } catch (e) {
+                     console.warn('Could not read CSS rules from stylesheet:', styleSheet.href, e);
+                     return '';
+                   }
+                 })
+                 .join('\n');
+          } catch (e) {
+              console.error("Error collecting styles:", e);
+              // Handle error, maybe print without styles or notify user
+          }
 
-  if (error) {
-    return <div className="flex justify-center items-center h-screen text-red-600"><p>{error}</p></div>;
-  }
 
-  if (!data) {
-    return <div className="flex justify-center items-center h-screen"><p>Data tidak tersedia.</p></div>;
-  }
+          const printWindow = window.open('', '', 'height=800,width=800,scrollbars=yes'); // Added scrollbars
+          if (printWindow) {
+             printWindow.document.write('<html><head><title>');
+             printWindow.document.write(document.title);
+             printWindow.document.write('</title>');
+              // Inject Tailwind/Global styles and specific print styles
+             printWindow.document.write('<style>');
+             printWindow.document.write(styles);
+              // Add print-specific styles from the component if needed, or directly here
+              printWindow.document.write(`
+                @media print {
+                  @page { size: A4; margin: 15mm; } /* Adjust margins as needed */
+                  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: 'Times New Roman', Times, serif; font-size: 10pt; line-height: 1.2; }
+                  .no-print { display: none !important; }
+                  /* Add other print specific styles here */
+                   .print-container { /* Ensure container takes full width */
+                     width: 100%;
+                     max-width: 100%;
+                     margin: 0;
+                     padding: 0;
+                     border: none;
+                     box-shadow: none;
+                     break-inside: avoid; /* Try to prevent breaking inside container */
+                  }
+                  /* Adjust form element styles if needed for print */
+                  input, textarea, select { border: none !important; background: transparent !important; font-weight: bold !important; } /* Example: remove borders for print */
+                   h3 { margin-top: 0.5rem; margin-bottom: 0.25rem; } /* Adjust spacing */
+                   .grid > div { break-inside: avoid; } /* Prevent breaking inside grid items */
+                }
+              `);
+             printWindow.document.write('</style>');
+             printWindow.document.write('</head><body>');
+             printWindow.document.write('<div class="print-container">'); // Wrap content
+             printWindow.document.write(printContent.innerHTML);
+             printWindow.document.write('</div>'); // Close wrapper
+             printWindow.document.write('</body></html>');
+             printWindow.document.close();
 
-  return (
-    <div className="bg-gray-100 p-4 print:bg-white">
-       {/* Button is hidden in print view using 'no-print' class */}
-       <div className="mb-4 text-center no-print">
-         <Button onClick={handlePrint} >
-           <Printer className="mr-2 h-4 w-4" /> Cetak Ulang Formulir
-         </Button>
-       </div>
-      {/* This div is what gets printed */}
-      <div ref={printRef} className="print-container">
-        <FormulirPendaftaranPrint data={data} />
+
+             // Delay print command slightly to ensure content is loaded
+              setTimeout(() => {
+                 try {
+                    printWindow.focus();
+                    printWindow.print();
+                    // Consider closing the window after a delay, or letting the user close it
+                    // setTimeout(() => printWindow.close(), 1000);
+                 } catch(e) {
+                    console.error("Error during print execution:", e);
+                     alert('Gagal memulai proses cetak.');
+                    if (!printWindow.closed) printWindow.close();
+                 } finally {
+                    document.title = originalTitle; // Restore original title
+                 }
+              }, 500); // Delay before print
+
+          } else {
+            alert('Gagal membuka jendela cetak. Mohon izinkan pop-up untuk situs ini.');
+          }
+        }, 0); // End of setTimeout for opening window
+     }
+   };
+
+    if (loading) {
+      return <div className="flex justify-center items-center h-screen"><p>Memuat data formulir...</p></div>;
+    }
+
+    if (error) {
+      return <div className="flex justify-center items-center h-screen text-red-600"><p>{error}</p></div>;
+    }
+
+    if (!data) {
+      return <div className="flex justify-center items-center h-screen"><p>Data tidak tersedia.</p></div>;
+    }
+
+    return (
+      <div className="bg-gray-100 p-4 print:bg-white">
+         {/* Button is hidden in print view using 'no-print' class */}
+         <div className="mb-4 text-center no-print">
+           <Button onClick={handlePrint} >
+             <Printer className="mr-2 h-4 w-4" /> Cetak Ulang Formulir
+           </Button>
+         </div>
+        {/* This div is what gets printed */}
+        <div ref={printRef} className="print-container">
+          <FormulirPendaftaranPrint data={data} />
+        </div>
       </div>
-    </div>
-  );
+    );
 };
+
+
+// Main component that uses the Auth hook
+const CetakFormulirPage = () => {
+   const { user, loading: authLoading, requireAuth } = useAuth();
+
+    useEffect(() => {
+        requireAuth(); // Ensure user is authenticated
+    }, [requireAuth]);
+
+    if (authLoading || !user) {
+        // Show loading indicator or redirect logic handled by requireAuth
+        return <div className="flex justify-center items-center h-screen"><p>Memeriksa autentikasi...</p></div>;
+    }
+
+   // If authenticated, render the page content
+   return <CetakFormulirPageContent />;
+};
+
 
 export default CetakFormulirPage;
