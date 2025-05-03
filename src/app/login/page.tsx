@@ -20,7 +20,7 @@ import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogIn } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth'; // Import the auth hook
+import { useAuth } from '../../hooks/use-auth'; // Import the auth hook using relative path
 
 // Validation Schema
 const loginSchema = z.object({
