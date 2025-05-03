@@ -8,6 +8,7 @@ import { toast } from '@/hooks/use-toast';
 // Mock user data structure
 interface AuthUser {
     name: string;
+    username: string; // Add username
     isAdmin: boolean;
 }
 
@@ -66,13 +67,20 @@ export const useAuth = () => {
 
         // Mock authentication logic
         if (username === 'admin' && password === 'password') {
-            const loggedInUser: AuthUser = { name: "Admin User", isAdmin: true };
+            const loggedInUser: AuthUser = { name: "Admin User", username: "admin", isAdmin: true };
             console.log("Login successful:", loggedInUser);
             setUser(loggedInUser);
             // Store user in local storage for persistence (REMOVE in real app)
             localStorage.setItem('mockUser', JSON.stringify(loggedInUser));
             setLoading(false);
             return true;
+         } else if (username === 'petugas' && password === 'password') { // Add another user for testing
+             const loggedInUser: AuthUser = { name: "Petugas Biasa", username: "petugas", isAdmin: false };
+             console.log("Login successful:", loggedInUser);
+             setUser(loggedInUser);
+             localStorage.setItem('mockUser', JSON.stringify(loggedInUser));
+             setLoading(false);
+             return true;
         } else {
             console.log("Login failed: Invalid credentials");
             toast({
@@ -101,14 +109,60 @@ export const useAuth = () => {
 
      // Function to redirect if not authenticated (useful for protecting pages)
      const requireAuth = useCallback(() => {
-        if (!loading && !user && window.location.pathname.startsWith('/admin')) {
-            console.log("RequireAuth: Not logged in, redirecting.");
-            router.push('/login');
+        // Check if loading is complete before potentially redirecting
+        if (!loading) {
+            if (!user && window.location.pathname.startsWith('/admin')) {
+                console.log("RequireAuth: Not logged in, redirecting.");
+                router.push('/login');
+            } else {
+                console.log(`RequireAuth: Status - Logged In: ${!!user}`);
+            }
         } else {
-             console.log(`RequireAuth: Status - Loading: ${loading}, User: ${!!user}`);
+            console.log("RequireAuth: Still loading auth state...");
         }
     }, [loading, user, router]);
 
-    return { user, loading, login, logout, requireAuth };
-};
 
+    // --- Placeholder Functions for Profile Management ---
+    const updateUserProfile = useCallback(async (newName: string, newUsername: string): Promise<boolean> => {
+        // --- TODO: Implement actual API call to update user profile ---
+        console.log("Attempting to update profile:", { newName, newUsername });
+        await new Promise(resolve => setTimeout(resolve, 700)); // Simulate delay
+
+        // Mock logic: Assume username 'admin_new' is taken
+        if (newUsername === 'admin_new') {
+             toast({ title: "Update Gagal", description: "Username sudah digunakan.", variant: "destructive" });
+             return false;
+        }
+
+        if (user) {
+            const updatedUser = { ...user, name: newName, username: newUsername };
+            setUser(updatedUser);
+            localStorage.setItem('mockUser', JSON.stringify(updatedUser)); // Update mock storage
+            console.log("Profile updated locally:", updatedUser);
+            return true;
+        }
+        return false; // Should not happen if called when logged in
+    }, [user]);
+
+    const changeUserPassword = useCallback(async (currentPassword: string, newPassword: string): Promise<boolean> => {
+        // --- TODO: Implement actual API call to change password ---
+        console.log("Attempting to change password...");
+        await new Promise(resolve => setTimeout(resolve, 700)); // Simulate delay
+
+        // Mock logic: Assume current password is 'password'
+        if (currentPassword !== 'password') { // Replace 'password' with check against actual current password hash in real app
+             toast({ title: "Gagal", description: "Password saat ini salah.", variant: "destructive" });
+             return false;
+        }
+
+        // Simulate successful password change
+        console.log("Password changed successfully (mock).");
+        // In a real app, the backend handles the change. No local user state change needed usually.
+        return true;
+    }, []);
+    // --- End Placeholder Functions ---
+
+
+    return { user, loading, login, logout, requireAuth, updateUserProfile, changeUserPassword };
+};

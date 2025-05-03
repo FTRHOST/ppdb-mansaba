@@ -20,7 +20,7 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { LogOut, LayoutDashboard, Users, UserPlus, ListChecks, FileText, Settings, Edit, FileInput, BarChart3, BookUser, BriefcaseBusiness, School } from 'lucide-react';
+import { LogOut, LayoutDashboard, Users, UserPlus, ListChecks, FileText, Settings, Edit, FileInput, BarChart3, BookUser, BriefcaseBusiness, School, UserCog } from 'lucide-react'; // Added UserCog
 import { cn } from '@/lib/utils';
 import { useAuth } from '../../hooks/use-auth'; // Import the hook using relative path
 import { useEffect } from 'react'; // Import useEffect
@@ -196,6 +196,18 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
              {user?.isAdmin && ( // Only show these if user is admin
                <SidebarGroup>
                  <SidebarGroupLabel>Administrasi</SidebarGroupLabel>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive('/admin/profil')}
+                      tooltip="Profil Saya"
+                    >
+                      <Link href="/admin/profil">
+                        <UserCog /> {/* Changed icon */}
+                        <span>Profil Saya</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       asChild
