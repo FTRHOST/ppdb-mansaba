@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -48,8 +49,8 @@ export const useAuth = () => {
                 setTimeout(() => {
                      setLoading(false);
                      console.log("No user found or error parsing, redirecting to login.");
-                     // Redirect if on an admin page and not logged in
-                     if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+                     // Redirect if on an admin page (but not the login page itself) and not logged in
+                     if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/login')) {
                          router.push('/login');
                      }
                  }, 500);
@@ -59,8 +60,8 @@ export const useAuth = () => {
             setTimeout(() => {
                  setLoading(false);
                  console.log("No user found in storage, redirecting to login.");
-                 // Redirect if on an admin page and not logged in
-                 if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+                 // Redirect if on an admin page (but not the login page itself) and not logged in
+                 if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/login')) {
                      router.push('/login');
                  }
             }, 500);
@@ -75,7 +76,7 @@ export const useAuth = () => {
 
         // Mock authentication logic
         // 1. Check for hardcoded admin user
-        if (username === 'admin' && password === 'password') {
+        if (username.toLowerCase() === 'admin' && password === 'password') { // Case-insensitive username check for admin
             const loggedInUser: AuthUser = { name: "Admin Utama", username: "admin", isAdmin: true };
             console.log("Login successful (Admin):", loggedInUser);
             setUser(loggedInUser);
@@ -96,8 +97,8 @@ export const useAuth = () => {
             }
         }
 
-        // Find the petugas by username (case-sensitive match)
-        const foundPetugas = petugasList.find(p => p.username === username);
+        // Find the petugas by username (case-insensitive match)
+        const foundPetugas = petugasList.find(p => p.username.toLowerCase() === username.toLowerCase());
 
         if (foundPetugas) {
             // IMPORTANT: Comparing plain text passwords - highly insecure!
@@ -145,7 +146,8 @@ export const useAuth = () => {
      const requireAuth = useCallback(() => {
         // Check if loading is complete before potentially redirecting
         if (!loading) {
-            if (!user && typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+            // Redirect if on an admin page (but not login) and not logged in
+            if (!user && typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && !window.location.pathname.startsWith('/login')) {
                 console.log("RequireAuth: Not logged in, redirecting.");
                 router.push('/login');
             } else {
@@ -209,13 +211,13 @@ export const useAuth = () => {
 
          let correctCurrentPassword = false;
 
-         // Check admin password
-         if (user.isAdmin && user.username === 'admin' && currentPassword === 'password') {
+         // Check admin password (case-insensitive username)
+         if (user.isAdmin && user.username.toLowerCase() === 'admin' && currentPassword === 'password') {
              correctCurrentPassword = true;
              // In a real app, you'd send current/new password to backend for admin
              console.log("Password changed successfully for admin (mock).");
          } else if (!user.isAdmin) {
-             // Check petugas password from local storage
+             // Check petugas password from local storage (case-insensitive username)
              const storedPetugas = localStorage.getItem('petugasAccounts');
              let petugasList: PetugasAccount[] = [];
               if (storedPetugas) {
