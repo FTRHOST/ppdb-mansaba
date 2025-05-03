@@ -1,4 +1,3 @@
-
 'use client';
 
 import type React from 'react';
@@ -31,7 +30,7 @@ import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils'; // Import cn utility
 
 // Mock data structure - adjust based on actual daftar ulang data
-export interface PesertaDaftarUlang {
+export interface PesertaDaftarUlang { // Export interface
   id: number; // Unique DB ID for daftar ulang record
   pendaftarId: number; // Link to Pendaftar table
   nomorPendaftaran: string;
@@ -42,11 +41,12 @@ export interface PesertaDaftarUlang {
   ukuranSeragam: string;
 }
 
-// Mock data - replace with actual data fetching (filter pendaftar based on statusDaftarUlang='Sudah')
-const mockData: PesertaDaftarUlang[] = [
+// Mock data - replace with actual data fetching (filter pendaftar based on statusDaftarUlang='Sudah') - Export data
+export const mockPesertaDaftarUlangData: PesertaDaftarUlang[] = [
   { id: 101, pendaftarId: 1, nomorPendaftaran: 'A-2526/0001', nomorDaftarUlang: 'DU-1', nama: 'Ahmad Fauzi', sekolahAsal: 'MTs N 1 Batang', tanggalDaftarUlang: '2024-07-15', ukuranSeragam: 'L' },
   { id: 102, pendaftarId: 3, nomorPendaftaran: 'A-2526/0003', nomorDaftarUlang: 'DU-2', nama: 'Citra Lestari', sekolahAsal: 'MTs Al Hidayah', tanggalDaftarUlang: '2024-07-15', ukuranSeragam: 'M' },
-  { id: 103, pendaftarId: 6, nomorPendaftaran: 'A-2526/0006', nomorDaftarUlang: 'DU-3', nama: 'Fitri Handayani', sekolahAsal: 'SMP N 1 Subah', tanggalDaftarUlang: '2024-07-16', ukuranSeragam: 'XL' },
+  { id: 103, pendaftarId: 6, nomorPendaftaran: 'A-2526/0006', nomorDaftarUlang: 'DU-3', nama: 'Fitri Handayani', sekolahAsal: 'SMP N 1 Subah', tanggalDaftarUlang: format(new Date(), 'yyyy-MM-dd'), ukuranSeragam: 'XL' }, // Today
+  // Add more mock data if needed for dashboard testing
 ];
 
 export default function PesertaDaftarUlangPage() {
@@ -61,7 +61,7 @@ export default function PesertaDaftarUlangPage() {
     const fetchData = async () => {
       setLoading(true);
       await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-      setPeserta(mockData);
+      setPeserta(mockPesertaDaftarUlangData); // Use exported data
       setLoading(false);
     };
     fetchData();
@@ -90,6 +90,22 @@ export default function PesertaDaftarUlangPage() {
       });
     } else {
          console.log('Print window opened successfully.');
+         // Trigger print after a short delay to allow content loading
+          setTimeout(() => {
+              try {
+                  newWindow.print();
+                  console.log("Print command issued.");
+                  // Optionally close the window after printing, might interfere with user viewing/saving
+                  // setTimeout(() => newWindow.close(), 1000);
+              } catch (e) {
+                  console.error("Error calling print() on new window:", e);
+                  toast({
+                     title: "Gagal Mencetak",
+                     description: "Terjadi kesalahan saat mencoba memanggil fungsi cetak.",
+                     variant: "destructive",
+                  });
+              }
+          }, 1000); // Adjust delay as needed
     }
   };
 
@@ -258,5 +274,3 @@ export default function PesertaDaftarUlangPage() {
     </div>
   );
 }
-
-    

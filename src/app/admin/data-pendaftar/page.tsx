@@ -26,22 +26,23 @@ import {
 import { MoreHorizontal } from "lucide-react";
 
 // Mock data structure - replace with actual data type from API/DB
-interface Pendaftar {
+export interface Pendaftar { // Export interface
   id: number; // Unique DB ID
   nomorPendaftaran: string;
   nama: string;
   sekolahAsal: string;
   statusDaftarUlang: 'Sudah' | 'Belum'; // Example status
+  tanggalDaftar: Date; // Added registration date
 }
 
-// Mock data - replace with actual data fetching
-const mockData: Pendaftar[] = [
-  { id: 1, nomorPendaftaran: 'A-2526/0001', nama: 'Ahmad Fauzi', sekolahAsal: 'MTs N 1 Batang', statusDaftarUlang: 'Sudah' },
-  { id: 2, nomorPendaftaran: 'A-2526/0002', nama: 'Budi Santoso', sekolahAsal: 'SMP N 2 Banyuputih', statusDaftarUlang: 'Belum' },
-  { id: 3, nomorPendaftaran: 'A-2526/0003', nama: 'Citra Lestari', sekolahAsal: 'MTs Al Hidayah', statusDaftarUlang: 'Sudah' },
-  { id: 4, nomorPendaftaran: 'A-2526/0004', nama: 'Dewi Anggraini', sekolahAsal: 'SMP Islam Terpadu', statusDaftarUlang: 'Belum' },
-  { id: 5, nomorPendaftaran: 'A-2526/0005', nama: 'Eko Prasetyo', sekolahAsal: 'MTs N 1 Batang', statusDaftarUlang: 'Belum' },
-  { id: 6, nomorPendaftaran: 'A-2526/0006', nama: 'Fitri Handayani', sekolahAsal: 'SMP N 1 Subah', statusDaftarUlang: 'Sudah' },
+// Mock data - replace with actual data fetching - Export mockData
+export const mockPendaftarData: Pendaftar[] = [
+  { id: 1, nomorPendaftaran: 'A-2526/0001', nama: 'Ahmad Fauzi', sekolahAsal: 'MTs N 1 Batang', statusDaftarUlang: 'Sudah', tanggalDaftar: new Date('2024-07-15') },
+  { id: 2, nomorPendaftaran: 'A-2526/0002', nama: 'Budi Santoso', sekolahAsal: 'SMP N 2 Banyuputih', statusDaftarUlang: 'Belum', tanggalDaftar: new Date('2024-07-16') },
+  { id: 3, nomorPendaftaran: 'A-2526/0003', nama: 'Citra Lestari', sekolahAsal: 'MTs Al Hidayah', statusDaftarUlang: 'Sudah', tanggalDaftar: new Date() }, // Today
+  { id: 4, nomorPendaftaran: 'A-2526/0004', nama: 'Dewi Anggraini', sekolahAsal: 'SMP Islam Terpadu', statusDaftarUlang: 'Belum', tanggalDaftar: new Date() }, // Today
+  { id: 5, nomorPendaftaran: 'A-2526/0005', nama: 'Eko Prasetyo', sekolahAsal: 'MTs N 1 Batang', statusDaftarUlang: 'Belum', tanggalDaftar: new Date('2024-07-17') },
+  { id: 6, nomorPendaftaran: 'A-2526/0006', nama: 'Fitri Handayani', sekolahAsal: 'SMP N 1 Subah', statusDaftarUlang: 'Sudah', tanggalDaftar: new Date() }, // Today
 ];
 
 export default function DataPendaftarPage() {
@@ -55,7 +56,7 @@ export default function DataPendaftarPage() {
     const fetchData = async () => {
       setLoading(true);
       await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-      setPendaftar(mockData);
+      setPendaftar(mockPendaftarData); // Use exported data
       setLoading(false);
     };
     fetchData();
