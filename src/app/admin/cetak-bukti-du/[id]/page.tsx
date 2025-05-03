@@ -28,21 +28,27 @@ interface CombinedData {
   bayarDaftarUlang: boolean;
   biayaDaftarUlang?: number | null;
   tanggalDaftarUlang: string;
+  jenisKelamin: 'Laki-laki' | 'Perempuan'; // Added for filtering later if needed
+  ukuranSeragam: string; // Added
+  seragamOsis: boolean; // Added
+  seragamPramuka: boolean; // Added
+  seragamBatik: boolean; // Added
+  seragamOlahraga: boolean; // Added
 }
 
-// Mock Combined Data
+// Mock Combined Data - Updated with new fields
 const mockCombinedData: CombinedData[] = [
    {
      pendaftarId: 1, nomorPendaftaran: 'A-2526/0001', nama: 'Ahmad Fauzi', alamatLengkap: 'Dukuh Krajan, Banyuputih, RT/RW 01/01, Kec. Banyuputih, Kab. Batang, Prov. Jawa Tengah', sekolahAsal: 'MTs N 1 Batang', kabupaten: 'Batang',
-     daftarUlangId: 101, nomorDaftarUlang: 'DU-1', kelengkapanKK: true, kelengkapanSKL: true, kelengkapanPiagam: false, kelengkapanSKTM: false, bayarDaftarUlang: true, biayaDaftarUlang: 400000, tanggalDaftarUlang: '2024-07-15'
+     daftarUlangId: 101, nomorDaftarUlang: 'DU-1', kelengkapanKK: true, kelengkapanSKL: true, kelengkapanPiagam: false, kelengkapanSKTM: false, bayarDaftarUlang: true, biayaDaftarUlang: 400000, tanggalDaftarUlang: '2024-07-15', jenisKelamin: 'Laki-laki', ukuranSeragam: 'L', seragamOsis: true, seragamPramuka: true, seragamBatik: true, seragamOlahraga: false
    },
    {
      pendaftarId: 3, nomorPendaftaran: 'A-2526/0003', nama: 'Citra Lestari', alamatLengkap: 'Dukuh Sawah, Subah, RT/RW 02/03, Kec. Subah, Kab. Batang, Prov. Jawa Tengah', sekolahAsal: 'MTs Al Hidayah', kabupaten: 'Batang',
-     daftarUlangId: 102, nomorDaftarUlang: 'DU-2', kelengkapanKK: true, kelengkapanSKL: false, kelengkapanPiagam: true, kelengkapanSKTM: true, bayarDaftarUlang: true, biayaDaftarUlang: 300000, tanggalDaftarUlang: '2024-07-15'
+     daftarUlangId: 102, nomorDaftarUlang: 'DU-2', kelengkapanKK: true, kelengkapanSKL: false, kelengkapanPiagam: true, kelengkapanSKTM: true, bayarDaftarUlang: true, biayaDaftarUlang: 300000, tanggalDaftarUlang: '2024-07-15', jenisKelamin: 'Perempuan', ukuranSeragam: 'M', seragamOsis: true, seragamPramuka: true, seragamBatik: true, seragamOlahraga: true
    },
    {
      pendaftarId: 6, nomorPendaftaran: 'A-2526/0006', nama: 'Fitri Handayani', alamatLengkap: 'Jl. Mawar No. 1, Subah, Batang', sekolahAsal: 'SMP N 1 Subah', kabupaten: 'Batang',
-     daftarUlangId: 103, nomorDaftarUlang: 'DU-3', kelengkapanKK: false, kelengkapanSKL: true, kelengkapanPiagam: false, kelengkapanSKTM: false, bayarDaftarUlang: false, biayaDaftarUlang: null, tanggalDaftarUlang: '2024-07-16'
+     daftarUlangId: 103, nomorDaftarUlang: 'DU-3', kelengkapanKK: false, kelengkapanSKL: true, kelengkapanPiagam: false, kelengkapanSKTM: false, bayarDaftarUlang: false, biayaDaftarUlang: null, tanggalDaftarUlang: '2024-07-16', jenisKelamin: 'Perempuan', ukuranSeragam: 'XL', seragamOsis: true, seragamPramuka: false, seragamBatik: true, seragamOlahraga: true
    },
  ];
 
@@ -114,19 +120,15 @@ const CetakBuktiDUPageContent = () => {
         }
       };
 
-        // No need to explicitly check for user here, useAuth handles the redirect loop
-        // If user context is null after loading, the redirect should happen in useAuth
-        // Only fetch if an ID exists and loading is done
        if (daftarUlangId && !authLoading) {
            fetchData();
        } else if (!daftarUlangId) {
            setError('ID Daftar Ulang tidak valid.');
            setLoading(false);
        }
-       // If authLoading is true, we wait for it to finish
-       // If user becomes null after loading, useAuth redirects
 
-    }, [daftarUlangId, user, authLoading, isClient]); // Add dependencies
+
+    }, [daftarUlangId, user, authLoading, isClient, router]); // Added router
 
    const handlePrint = () => {
      console.log('Handle Print button clicked.');
@@ -164,14 +166,12 @@ const CetakBuktiDUPageContent = () => {
              console.log('Collected styles for print window.');
          } catch (e) { console.error("Error collecting styles:", e); }
 
-         // Adjusted printSpecificStyles to match the new receipt component and target F4 Landscape
+         // Updated printSpecificStyles for F4 Landscape (330mm x 210mm) with 1cm margin
          const printSpecificStyles = `
            @media print {
              @page {
-               /* F4 Landscape approx 330mm x 216mm or 13 x 8.5 inches */
-               /* Use inches for potentially better cross-browser consistency? */
-               size: 13in 8.5in;
-               margin: 10mm 8mm 5mm 8mm; /* top, right, bottom, left */
+               size: 330mm 210mm; /* F4 Landscape */
+               margin: 1cm; /* 1cm margin on all sides */
              }
              html, body {
                margin: 0;
@@ -182,7 +182,7 @@ const CetakBuktiDUPageContent = () => {
                -webkit-print-color-adjust: exact !important; /* Force color printing */
                print-color-adjust: exact !important;
                width: 100%;
-               height: 100%; /* Try 100% height for body */
+               height: 100%; /* Ensure body takes full printable height */
                background-color: white !important; /* Ensure white background for print */
              }
              .no-print { display: none !important; }
@@ -193,8 +193,8 @@ const CetakBuktiDUPageContent = () => {
                 justify-content: space-between !important;
                 align-items: flex-start !important; /* Align items at the top */
                 gap: 10mm !important; /* Gap between the two receipts */
-                width: 100% !important; /* Full page width */
-                height: calc(100% - 15mm) !important; /* Attempt to fill page height minus margins */
+                width: calc(330mm - 2cm); /* Full printable width */
+                height: calc(210mm - 2cm); /* Full printable height */
                 padding: 0 !important;
                 border: none !important;
                 box-shadow: none !important;
@@ -203,9 +203,7 @@ const CetakBuktiDUPageContent = () => {
              }
              /* Style for each individual receipt wrapper */
              .receipt-outer-wrapper {
-                 /* Let flex handle the width, or explicitly set */
-                 /* flex: 1 !important; */ /* Take equal space */
-                 width: calc(50% - 5mm) !important; /* Explicit width calculation */
+                 width: calc(( (330mm - 2cm) - 10mm) / 2); /* (Printable Width - Gap) / 2 */
                  height: 100% !important; /* Make wrapper take full calculated height */
                  border: 1px solid black !important; /* Add border to the wrapper */
                  box-sizing: border-box !important;
@@ -262,18 +260,20 @@ const CetakBuktiDUPageContent = () => {
               .receipt-container .bg-transparent { background-color: transparent !important; }
 
              /* Adjust Footer Box */
-             .receipt-container .border.border-black.p-1\\.5 {
+             .receipt-container .border.border-black.p-1\\.5.mt-1.mb-2 { /* Adjusted margin here */
                 border-width: 1px !important;
                 border-color: black !important;
                 padding: 1mm !important;
                 background-color: #f3f4f6 !important; /* Light gray background */
                 print-color-adjust: exact !important; /* Ensure background prints */
+                margin-top: 1mm !important; /* Reduce top margin */
+                margin-bottom: 1mm !important; /* Reduce bottom margin */
              }
              .receipt-container .text-\\[8pt\\] { font-size: 7pt !important; line-height: 1.1 !important; }
              .receipt-container .small-print { font-size: 7pt !important; line-height: 1.1 !important; } /* Ensure class applies */
 
              /* Adjust Signature */
-             .receipt-container .signature-space { height: 8mm !important; } /* Increased space for signature */
+             .receipt-container .signature-space { height: 15mm !important; } /* Increased space for signature */
              .receipt-container .receipt-signature { margin-top: 1mm !important; } /* Reduced margin above signature block */
            }
            /* Screen styles for preview */
@@ -339,8 +339,7 @@ const CetakBuktiDUPageContent = () => {
       }, 50); // Added small delay
    };
 
-    // Use authLoading state for the initial loading indicator
-     if (!isClient || authLoading) { // Also check isClient here
+     if (authLoading) {
        return (
            <div className="flex justify-center items-center h-screen">
                <Loader2 className="mr-2 h-8 w-8 animate-spin" />
@@ -349,8 +348,6 @@ const CetakBuktiDUPageContent = () => {
        );
      }
 
-    // If loading is done but user is null (and not on login page), useAuth should redirect.
-    // Show a minimal loading/redirecting state while that happens.
     if (!user) {
         return (
             <div className="flex justify-center items-center h-screen">
@@ -360,12 +357,10 @@ const CetakBuktiDUPageContent = () => {
         );
     }
 
-    // If error occurred during data fetching
     if (error) {
       return <div className="flex justify-center items-center h-screen text-red-600"><p>{error}</p></div>;
     }
 
-    // If data fetching is finished but data is still null (shouldn't normally happen if fetch logic is correct)
     if (!data) {
       return (
            <div className="flex justify-center items-center h-screen">
@@ -374,9 +369,7 @@ const CetakBuktiDUPageContent = () => {
       );
     }
 
-    // Render the main content if data is available and user is authenticated
     return (
-      // Added min-h-screen and flex container for better screen view centering
       <div className="p-4 print:p-0 min-h-screen flex flex-col">
          <div className="mb-4 flex justify-between items-center no-print max-w-6xl mx-auto w-full"> {/* Ensure controls take full width */}
              <Button variant="outline" size="sm" onClick={() => router.back()}>
@@ -386,9 +379,7 @@ const CetakBuktiDUPageContent = () => {
                  <Printer className="mr-2 h-4 w-4" /> Cetak Bukti (F4 Landscape)
              </Button>
          </div>
-         {/* Container for the print content */}
         <div ref={printRef} className="print-preview-container flex-grow">
-          {/* Pass the fetched data (including namaPetugas) to the print component */}
           <BuktiDaftarUlangPrint data={data} />
         </div>
       </div>
@@ -404,7 +395,6 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
          setIsClient(true);
      }, []);
 
-    // Show loading indicator until client-side mount and auth check complete
      if (!isClient || authLoading) {
          return (
              <div className="flex justify-center items-center h-screen">
@@ -414,8 +404,6 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
          );
      }
 
-    // If not logged in and not loading, useAuth hook handles the redirect.
-    // Render children directly if authenticated.
     return <>{user ? children : null}</>; // Render children only if user exists after loading
 };
 
