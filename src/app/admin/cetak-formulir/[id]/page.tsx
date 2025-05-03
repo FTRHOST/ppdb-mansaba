@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -143,6 +142,7 @@ const mockFullData: PendaftarLengkap[] = [
    },
  ];
 
+// Component to render the actual page content once auth is confirmed
 const CetakFormulirPageContent = () => {
     const params = useParams();
     const router = useRouter(); // Initialize router
@@ -175,12 +175,6 @@ const CetakFormulirPageContent = () => {
                 tanggalCetak: format(new Date(), 'dd MMMM yyyy', { locale: localeId })
             };
             setData(dataWithPrintDate as PendaftarLengkap);
-
-            // Optionally auto trigger print, but might be better user experience to let them click
-            // setTimeout(() => {
-            //    handlePrint();
-            // }, 500);
-
           } else {
             setError(`Data pendaftar dengan ID ${pendaftarId} tidak ditemukan.`);
           }
@@ -211,10 +205,9 @@ const CetakFormulirPageContent = () => {
          return;
      }
 
-     // Use a timeout to allow potential state updates before opening print window
      setTimeout(() => {
          const originalTitle = document.title;
-         document.title = `Formulir Pendaftaran - ${data?.nama || pendaftarId}`; // Set title for print window
+         document.title = `Formulir Pendaftaran - ${data?.nama || pendaftarId}`;
 
          let styles = '';
          try {
@@ -266,7 +259,6 @@ const CetakFormulirPageContent = () => {
                 try {
                    printWindow.focus();
                    printWindow.print();
-                   // setTimeout(() => printWindow.close(), 1000);
                 } catch(e) {
                    console.error("Error during print execution:", e);
                     toast({ title: "Gagal Mencetak", description: "Terjadi kesalahan saat memulai proses cetak.", variant: "destructive" });
@@ -296,7 +288,6 @@ const CetakFormulirPageContent = () => {
 
     return (
       <div className="bg-gray-100 p-4 print:bg-white print:p-0">
-         {/* Buttons hidden in print view */}
          <div className="mb-4 flex justify-between items-center no-print">
              <Button variant="outline" size="sm" onClick={() => router.back()}>
                  <ArrowLeft className="mr-2 h-4 w-4" /> Kembali
@@ -305,7 +296,6 @@ const CetakFormulirPageContent = () => {
              <Printer className="mr-2 h-4 w-4" /> Cetak Ulang Formulir (A4)
            </Button>
          </div>
-        {/* This div is what gets printed */}
         <div ref={printRef} className="print-container bg-white shadow-md print:shadow-none">
           <FormulirPendaftaranPrint data={data} />
         </div>
@@ -313,28 +303,49 @@ const CetakFormulirPageContent = () => {
     );
 };
 
+// Component to handle authentication check before rendering content
+const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { user, loading: authLoading } = useAuth();
+    const router = useRouter();
 
-// Main component that uses the Auth hook
+    useEffect(() => {
+        if (!authLoading && !user) {
+            // Redirect to login if not authenticated after loading
+            console.log("AuthCheck: Not authenticated, redirecting to login.");
+            router.push('/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search)); // Redirect back after login
+        }
+    }, [authLoading, user, router]);
+
+    if (authLoading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+                <span>Memeriksa autentikasi...</span>
+            </div>
+        );
+    }
+
+    if (!user) {
+         // Render minimal content or null while redirecting
+         return (
+             <div className="flex justify-center items-center h-screen">
+                 <p>Mengarahkan ke halaman login...</p>
+             </div>
+         );
+    }
+
+    // If authenticated and not loading, render the actual page content
+    return <>{children}</>;
+};
+
+
+// Main component that uses the AuthCheck wrapper
 const CetakFormulirPage = () => {
-   const { user, loading: authLoading } = useAuth();
-
-   // No need for requireAuth here as it's handled by AdminLayout
-   if (authLoading) {
-       return (
-          <div className="flex justify-center items-center h-screen">
-             <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-             <span>Memeriksa autentikasi...</span>
-          </div>
-       );
-   }
-
-   // If loading is complete but user is not found (should be handled by layout)
-   if (!user) {
-       return <div className="flex justify-center items-center h-screen"><p>Anda harus login untuk mengakses halaman ini.</p></div>;
-   }
-
-   // If authenticated, render the page content
-   return <CetakFormulirPageContent />;
+   return (
+       <AuthCheck>
+           <CetakFormulirPageContent />
+       </AuthCheck>
+   );
 };
 
 

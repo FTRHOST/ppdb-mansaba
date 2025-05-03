@@ -1,146 +1,122 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { usePathname, useRouter } from 'next/navigation'; // Import usePathname
+import { usePathname, useRouter } from 'next/navigation';
 import { toast } from '@/hooks/use-toast';
 
 // Mock user data structure
 interface AuthUser {
     name: string;
-    username: string; // Add username
-    isAdmin: boolean; // Flag to differentiate admin and petugas
-}
-
-// Mock Petugas data structure (mirroring InputPetugasPage)
-interface PetugasAccount {
-    nama: string;
     username: string;
-    password: string; // IMPORTANT: Storing plain text password is insecure. Only for mock purposes.
     isAdmin: boolean;
 }
 
+// Mock Petugas data structure
+interface PetugasAccount {
+    nama: string;
+    username: string;
+    password: string; // Insecure - for mock only
+    isAdmin: boolean;
+}
 
-// Mock Auth Hook - Replace with actual implementation using Firebase Auth or other provider
 export const useAuth = () => {
     const [user, setUser] = useState<AuthUser | null>(null);
     const [loading, setLoading] = useState(true); // Start loading initially
     const router = useRouter();
-    const pathname = usePathname(); // Get current path
+    const pathname = usePathname();
 
-    // Check auth state on initial load and pathname changes
-    useEffect(() => {
-        let isMounted = true; // Flag to prevent state updates on unmounted component
-        setLoading(true); // Set loading true when checking starts
-        console.log("Checking auth status for path:", pathname);
-
-        // Use a shorter delay for checking storage
-        const checkAuth = async () => {
-            await new Promise(resolve => setTimeout(resolve, 50)); // Short delay
-
-            if (!isMounted) return; // Don't proceed if unmounted
-
+    // Check auth state function
+    const checkAuthState = useCallback(async () => {
+        console.log("Checking auth state...");
+        setLoading(true); // Start loading
+        let parsedUser: AuthUser | null = null;
+        try {
+            await new Promise(resolve => setTimeout(resolve, 50)); // Simulate async check
             const storedUser = localStorage.getItem('mockUser');
-            let parsedUser: AuthUser | null = null;
-            let shouldRedirect = false;
-
             if (storedUser) {
-                try {
-                    parsedUser = JSON.parse(storedUser);
-                    console.log("User found in storage:", parsedUser);
-                } catch (e) {
-                    console.error("Error parsing stored user:", e);
-                    localStorage.removeItem('mockUser'); // Clear invalid data
-                }
+                parsedUser = JSON.parse(storedUser);
+                console.log("User found in storage:", parsedUser);
             } else {
                 console.log("No user found in storage.");
             }
+        } catch (e) {
+            console.error("Error reading auth state:", e);
+            localStorage.removeItem('mockUser'); // Clear potentially corrupt data
+        } finally {
+            setUser(parsedUser);
+            setLoading(false); // Finish loading *after* setting user state
+            console.log("Auth check complete. Loading:", false, "User:", parsedUser);
+        }
+    }, []); // No dependencies, runs once on hook mount
 
-            setUser(parsedUser); // Set user state (null if not found or error)
-            setLoading(false); // Set loading false after check completes
+    // Effect to run the check on mount
+    useEffect(() => {
+        checkAuthState();
+    }, [checkAuthState]); // Depend on the stable checkAuthState function
 
-            // Determine if redirect is needed *after* setting state
+    // Effect to handle redirection *after* loading is complete
+    useEffect(() => {
+        if (!loading) { // Only run redirect logic when loading is finished
             const isAdminPath = pathname?.startsWith('/admin');
             const isLoginPage = pathname === '/login';
-            if (!parsedUser && isAdminPath && !isLoginPage) {
-                 console.log("Redirecting to login because no user and on admin path.");
-                 shouldRedirect = true;
+
+            console.log(`Redirect check: loading=${loading}, user=${!!user}, isAdminPath=${isAdminPath}, isLoginPage=${isLoginPage}`);
+
+            if (!user && isAdminPath && !isLoginPage) {
+                console.log("Redirecting to login (user null, admin path, not login page).");
+                router.push('/login');
+            } else if (user && isLoginPage) {
+                 console.log("Redirecting to admin (user exists, on login page).");
+                 router.push('/admin'); // Redirect logged-in users away from login page
             }
-
-             if (shouldRedirect) {
-                 router.push('/login');
-             }
-        };
-
-        checkAuth();
-
-        // Cleanup function to set isMounted to false when component unmounts
-        return () => {
-            isMounted = false;
-        };
-    }, [pathname, router]); // Rerun check when path changes
-
+        }
+    }, [loading, user, pathname, router]); // Rerun when loading state, user, or path changes
 
     const login = useCallback(async (username: string, password: string): Promise<boolean> => {
         setLoading(true);
         console.log("Attempting login with:", username);
-        // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Mock authentication logic
-        // 1. Check for hardcoded admin user
-        if (username.toLowerCase() === 'admin' && password === 'password') { // Case-insensitive username check for admin
-            const loggedInUser: AuthUser = { name: "Admin Utama", username: "admin", isAdmin: true };
-            console.log("Login successful (Admin):", loggedInUser);
+        let loggedInUser: AuthUser | null = null;
+        let success = false;
+
+        // Check admin
+        if (username.toLowerCase() === 'admin' && password === 'password') {
+            loggedInUser = { name: "Admin Utama", username: "admin", isAdmin: true };
+            success = true;
+        } else {
+            // Check petugas
+            const storedPetugas = localStorage.getItem('petugasAccounts');
+            let petugasList: PetugasAccount[] = [];
+            if (storedPetugas) {
+                try { petugasList = JSON.parse(storedPetugas); } catch (e) { console.error("Error parsing petugas accounts:", e); }
+            }
+            const foundPetugas = petugasList.find(p => p.username.toLowerCase() === username.toLowerCase());
+            if (foundPetugas && foundPetugas.password === password) {
+                loggedInUser = { name: foundPetugas.nama, username: foundPetugas.username, isAdmin: foundPetugas.isAdmin };
+                success = true;
+            }
+        }
+
+        if (success && loggedInUser) {
+            console.log("Login successful:", loggedInUser);
             setUser(loggedInUser);
             localStorage.setItem('mockUser', JSON.stringify(loggedInUser));
-            setLoading(false);
-            return true;
+        } else {
+            console.log("Login failed: Invalid credentials");
+            toast({
+                title: "Login Gagal",
+                description: "Username atau password salah.",
+                variant: "destructive",
+            });
+            setUser(null);
+            localStorage.removeItem('mockUser');
         }
 
-        // 2. Check for petugas users stored in local storage
-        const storedPetugas = localStorage.getItem('petugasAccounts');
-        let petugasList: PetugasAccount[] = [];
-        if (storedPetugas) {
-            try {
-                petugasList = JSON.parse(storedPetugas);
-            } catch (e) {
-                console.error("Error parsing stored petugas accounts:", e);
-            }
-        }
-
-        // Find the petugas by username (case-insensitive match)
-        const foundPetugas = petugasList.find(p => p.username.toLowerCase() === username.toLowerCase());
-
-        if (foundPetugas) {
-            // IMPORTANT: Comparing plain text passwords - highly insecure!
-            if (foundPetugas.password === password) {
-                const loggedInUser: AuthUser = {
-                    name: foundPetugas.nama,
-                    username: foundPetugas.username,
-                    isAdmin: foundPetugas.isAdmin // Should be false for petugas
-                };
-                console.log("Login successful (Petugas):", loggedInUser);
-                setUser(loggedInUser);
-                localStorage.setItem('mockUser', JSON.stringify(loggedInUser));
-                setLoading(false);
-                return true;
-            }
-        }
-
-        // 3. If neither admin nor a matching petugas is found
-        console.log("Login failed: Invalid credentials");
-        toast({
-            title: "Login Gagal",
-            description: "Username atau password salah.",
-            variant: "destructive",
-        });
-        setUser(null); // Ensure user state is null on failed login
-        localStorage.removeItem('mockUser'); // Clear any potentially leftover mockUser
         setLoading(false);
-        return false;
+        return success;
 
-    }, []); // Removed router dependency
+    }, []);
 
     const logout = useCallback(async () => {
         setLoading(true);
@@ -153,95 +129,91 @@ export const useAuth = () => {
         router.push('/login');
     }, [router]);
 
-
-     // Function to redirect if not authenticated (useful for protecting pages)
-     // Ensure this only runs *after* the initial loading check is complete.
-     const requireAuth = useCallback(() => {
-        // Only check/redirect *after* the initial loading is done
-        if (!loading) {
-            const isAdminPath = pathname?.startsWith('/admin');
-            const isLoginPage = pathname === '/login';
-            if (!user && isAdminPath && !isLoginPage) {
-                console.log("RequireAuth: Not logged in (after load), redirecting.");
-                router.push('/login');
-            } else if (user) {
-                console.log(`RequireAuth: Status (after load) - Logged In: true (User: ${user.username}, Path: ${pathname})`);
-            } else {
-                 console.log(`RequireAuth: Status (after load) - Not logged in (Path: ${pathname}, Not redirecting as not on protected route)`);
-            }
-        } else {
-            console.log("RequireAuth: Still loading auth state...");
+    const requireAuth = useCallback(() => {
+        // This function might not be strictly necessary anymore if the redirect effect works correctly,
+        // but can be kept as a potential explicit check within component logic if needed.
+        if (!loading && !user && pathname?.startsWith('/admin') && pathname !== '/login') {
+            console.log("RequireAuth triggered: Redirecting to login.");
+            router.push('/login');
         }
-    }, [loading, user, pathname, router]); // Add router to dependencies
+    }, [loading, user, pathname, router]);
 
-
-    // --- Placeholder Functions for Profile Management ---
     const updateUserProfile = useCallback(async (newName: string, newUsername: string): Promise<boolean> => {
+        setLoading(true);
         console.log("Attempting to update profile:", { newName, newUsername });
         await new Promise(resolve => setTimeout(resolve, 700));
 
-        if (!user) return false;
+        if (!user) { setLoading(false); return false; }
 
+        // Check if new username is taken (excluding current user)
         const storedPetugas = localStorage.getItem('petugasAccounts');
         let petugasList: PetugasAccount[] = [];
         if (storedPetugas) {
             try { petugasList = JSON.parse(storedPetugas); } catch (e) { console.error("Error parsing petugas list for update check:", e); }
         }
-
         const usernameTaken = (newUsername.toLowerCase() === 'admin' && user.username.toLowerCase() !== 'admin') ||
                               petugasList.some(p => p.username.toLowerCase() === newUsername.toLowerCase() && p.username.toLowerCase() !== user.username.toLowerCase());
 
         if (usernameTaken) {
              toast({ title: "Update Gagal", description: "Username sudah digunakan.", variant: "destructive" });
+             setLoading(false);
              return false;
         }
 
+        // Update user state
         const updatedUser = { ...user, name: newName, username: newUsername };
         setUser(updatedUser);
         localStorage.setItem('mockUser', JSON.stringify(updatedUser));
 
+         // Update petugas list if the user being updated is a petugas
          if (!user.isAdmin) {
             const updatedPetugasList = petugasList.map(p =>
-                p.username.toLowerCase() === user.username.toLowerCase() ? { ...p, username: newUsername, nama: newName } : p
+                p.username.toLowerCase() === user.username.toLowerCase() // Find the original username
+                 ? { ...p, username: newUsername, nama: newName } // Update name and username
+                 : p
             );
             localStorage.setItem('petugasAccounts', JSON.stringify(updatedPetugasList));
          }
 
         console.log("Profile updated locally:", updatedUser);
+        setLoading(false);
         return true;
 
     }, [user]);
 
     const changeUserPassword = useCallback(async (currentPassword: string, newPassword: string): Promise<boolean> => {
+        setLoading(true);
         console.log("Attempting to change password...");
         await new Promise(resolve => setTimeout(resolve, 700));
 
-         if (!user) return false;
+         if (!user) { setLoading(false); return false; }
 
          let correctCurrentPassword = false;
 
+         // Check admin password
          if (user.isAdmin && user.username.toLowerCase() === 'admin' && currentPassword === 'password') {
              correctCurrentPassword = true;
+             // NOTE: In a real app, you'd update the admin password source here.
              console.log("Password changed successfully for admin (mock).");
          } else if (!user.isAdmin) {
+             // Check petugas password
              const storedPetugas = localStorage.getItem('petugasAccounts');
              let petugasList: PetugasAccount[] = [];
               if (storedPetugas) {
                   try { petugasList = JSON.parse(storedPetugas); } catch (e) { console.error("Error parsing petugas list for password check:", e); }
               }
-              const foundPetugas = petugasList.find(p => p.username.toLowerCase() === user.username.toLowerCase());
+              const foundPetugasIndex = petugasList.findIndex(p => p.username.toLowerCase() === user.username.toLowerCase());
 
-              if (foundPetugas && foundPetugas.password === currentPassword) {
+              if (foundPetugasIndex !== -1 && petugasList[foundPetugasIndex].password === currentPassword) {
                   correctCurrentPassword = true;
-                  const updatedPetugasList = petugasList.map(p =>
-                     p.username.toLowerCase() === user.username.toLowerCase() ? { ...p, password: newPassword } : p
-                  );
-                  localStorage.setItem('petugasAccounts', JSON.stringify(updatedPetugasList));
+                  // Update the password in the list
+                  petugasList[foundPetugasIndex].password = newPassword;
+                  localStorage.setItem('petugasAccounts', JSON.stringify(petugasList));
                   console.log("Password changed successfully for petugas (mock).");
               }
          }
 
-
+        setLoading(false);
         if (!correctCurrentPassword) {
              toast({ title: "Gagal", description: "Password saat ini salah.", variant: "destructive" });
              return false;
@@ -249,8 +221,6 @@ export const useAuth = () => {
 
         return true;
     }, [user]);
-    // --- End Placeholder Functions ---
-
 
     return { user, loading, login, logout, requireAuth, updateUserProfile, changeUserPassword };
 };
