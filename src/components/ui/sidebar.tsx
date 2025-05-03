@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -69,6 +70,13 @@ const SidebarProvider = React.forwardRef<
   ) => {
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
+    const [isClient, setIsClient] = React.useState(false); // Add isClient state
+
+    // Set isClient to true after mount
+    React.useEffect(() => {
+      setIsClient(true);
+    }, []);
+
 
     // This is the internal state of the sidebar.
     // We use openProp and setOpenProp for control from outside the component.
@@ -84,13 +92,17 @@ const SidebarProvider = React.forwardRef<
         }
 
         // This sets the cookie to keep the sidebar state.
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+        if (typeof window !== 'undefined') { // Check if window is defined
+           document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+        }
       },
       [setOpenProp, open]
     )
 
     // Helper to toggle the sidebar.
     const toggleSidebar = React.useCallback(() => {
+       // Check if isMobile has been determined
+       if (isMobile === undefined) return;
       return isMobile
         ? setOpenMobile((open) => !open)
         : setOpen((open) => !open)
@@ -108,8 +120,10 @@ const SidebarProvider = React.forwardRef<
         }
       }
 
-      window.addEventListener("keydown", handleKeyDown)
-      return () => window.removeEventListener("keydown", handleKeyDown)
+      if (typeof window !== 'undefined') { // Check if window is defined
+        window.addEventListener("keydown", handleKeyDown)
+        return () => window.removeEventListener("keydown", handleKeyDown)
+      }
     }, [toggleSidebar])
 
     // We add a state so that we can do data-state="expanded" or "collapsed".
@@ -121,13 +135,20 @@ const SidebarProvider = React.forwardRef<
         state,
         open,
         setOpen,
-        isMobile,
+        isMobile: !!isMobile, // Ensure boolean value
         openMobile,
         setOpenMobile,
         toggleSidebar,
       }),
       [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
     )
+
+     // Render null or a placeholder on the server/before hydration
+     if (!isClient) {
+         // Return a minimal div or null to match server render
+         return <div ref={ref} className={cn("group/sidebar-wrapper flex min-h-svh w-full", className)} {...props}></div>;
+     }
+
 
     return (
       <SidebarContext.Provider value={contextValue}>
@@ -190,6 +211,11 @@ const Sidebar = React.forwardRef<
           {children}
         </div>
       )
+    }
+
+    // Render nothing or a placeholder on initial render if isMobile is not determined yet
+    if (isMobile === undefined) {
+        return null; // Or a loading indicator
     }
 
     if (isMobile) {
@@ -583,7 +609,7 @@ const SidebarMenuButton = React.forwardRef<
         <TooltipContent
           side="right"
           align="center"
-          hidden={state !== "collapsed" || isMobile}
+          hidden={!isMobile && state !== "collapsed"} // Adjusted logic for tooltip visibility
           {...tooltip}
         />
       </Tooltip>
