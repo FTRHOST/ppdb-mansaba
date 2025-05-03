@@ -27,6 +27,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Settings, Upload, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image'; // Import next/image
+import { cn } from '@/lib/utils'; // Import cn
 
 // LocalStorage Key
 const LETTERHEAD_STORAGE_KEY = 'customLetterheadUri';
