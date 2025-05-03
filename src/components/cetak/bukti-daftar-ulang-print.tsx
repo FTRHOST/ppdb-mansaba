@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -72,7 +71,10 @@ const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean; namaPet
 
     return (
       // Use flex column, ensure height fills container for footer push
-      <div className={cn("receipt-container bg-white p-2 max-w-full print:max-w-none print:p-[4mm] mx-auto border border-black text-xs font-sans break-inside-avoid print:text-[9pt] print:leading-normal flex flex-col h-full", isArsip ? "border-t-4 border-t-red-600" : "")}>
+      <div className={cn(
+          "receipt-container bg-white p-2 max-w-full print:max-w-none print:p-[4mm] mx-auto text-xs font-sans break-inside-avoid print:text-[9pt] print:leading-normal flex flex-col h-full", // Removed border from here
+          isArsip ? "border-t-4 border-t-red-600" : ""
+      )}>
         {/* Header - Match image layout and styling */}
         <div className="text-center mb-1 border-b-2 border-black pb-1 print:mb-1 print:pb-1">
            <div className="flex justify-center items-center mb-0 print:mb-0"> {/* Reduced margin */}
@@ -121,7 +123,7 @@ const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean; namaPet
                      <ChecklistItem checked={data.kelengkapanPiagam} label="Fotocopi Piagam / Sertifikat Juara" />
                      <ChecklistItem checked={data.kelengkapanSKTM} label="SKTM / Surat Rekom PRNU" />
                 </div>
-                <div className="mt-0.5 flex items-center print:mt-0.5 ml-2"> {/* Tighter spacing, aligned with checklist */}
+                <div className="mt-1 flex items-center print:mt-1 ml-2"> {/* Increased top margin slightly */}
                      <ChecklistItem checked={data.bayarDaftarUlang} label="Daftar Ulang" />
                       {data.bayarDaftarUlang && (
                          <span className="ml-2 bg-black text-white font-semibold px-1 py-0.5 rounded text-[9pt] print:text-[8pt] print:ml-2 print:px-1 print:py-0.5"> {/* Increased margin */}
@@ -130,29 +132,30 @@ const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean; namaPet
                       )}
                 </div>
             </div>
+             {/* Info Box - Positioned directly below the checklist */}
+             <div className={cn(
+                 "border border-black p-1 text-center mt-2 mb-1 text-[8pt] leading-tight print:text-[7pt] print:my-1 print:p-1 small-print bg-gray-100 print:bg-gray-100" // Added mt-2
+              )}>
+                 {!isArsip ? (
+                     <>
+                         Selamat bergabung di Madrasah Hebat, MA NU 01 Banyuputih.<br/>
+                         Info keberangkatan pertama akan di informasikan di grup Whatsapp Siswa Baru 2025
+                     </>
+                 ) : (
+                     <>&nbsp;</> // Add non-breaking space to maintain height if border collapses
+                 )}
+             </div>
          </div>
 
         {/* Footer - Pushes to bottom */}
         <div className="receipt-footer mt-auto"> {/* Use mt-auto to push */}
-             {/* Info Box - match image style */}
-             <div className={cn("border border-black p-1 text-center my-1 text-[8pt] leading-tight print:text-[7pt] print:my-1 print:p-1 small-print bg-gray-100 print:bg-gray-100")}>
-                {!isArsip ? (
-                    <>
-                        Selamat bergabung di Madrasah Hebat, MA NU 01 Banyuputih.<br/>
-                        Info keberangkatan pertama akan di informasikan di grup Whatsapp Siswa Baru 2025
-                    </>
-                ) : (
-                    // Empty box for arsip, maintain height if needed or leave content empty
-                    <>&nbsp;</> // Add non-breaking space to maintain height if border collapses
-                )}
-            </div>
 
             {/* Signature - Positioned at the bottom right */}
             <div className="receipt-signature flex justify-end mt-1 print:mt-1"> {/* Reduced top margin */}
                 <div className="text-center text-xs print:text-[9pt]">
                     <p>{tempatDaftar}, {formattedTanggal}</p>
                     <p>Panitia PPDB</p>
-                    <div className="h-6 print:h-6 signature-space"></div> {/* Reduced height */}
+                    <div className="h-8 print:h-8 signature-space"></div> {/* Increased height for signature */}
                     <p className="font-bold underline print:font-bold">( {petugasNamaDisplay} )</p>
                 </div>
             </div>
@@ -168,17 +171,16 @@ export const BuktiDaftarUlangPrint: React.FC<{ data: BuktiDaftarUlangData }> = (
     // Pass the namaPetugas from data to both Receipt components
     return (
        // Use flex layout for side-by-side printing, ensure equal width
-       <div className="print-container flex flex-col md:flex-row gap-4 print:flex-row print:gap-[10mm]">
+       <div className="print-container flex flex-col md:flex-row gap-4 print:flex print:flex-row print:gap-[10mm]">
           {/* Copy 1: For Student */}
-          <div className="flex-1"> {/* Use flex-1 to make them equal width */}
+          <div className="receipt-outer-wrapper"> {/* Added wrapper with border */}
              <Receipt data={data} namaPetugas={data.namaPetugas} />
           </div>
 
           {/* Copy 2: For Arsip */}
-           <div className="flex-1"> {/* Use flex-1 to make them equal width */}
+           <div className="receipt-outer-wrapper"> {/* Added wrapper with border */}
               <Receipt data={data} isArsip={true} namaPetugas={data.namaPetugas} />
            </div>
        </div>
     );
   };
-

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -96,7 +95,7 @@ const CetakBuktiDUPageContent = () => {
                  biayaDaftarUlang: foundData.biayaDaftarUlang,
                  tanggalDaftarUlang: foundData.tanggalDaftarUlang,
                  kabupatenTempat: foundData.kabupaten,
-                 namaPetugas: user?.name || null, // Get petugas name from auth context
+                 namaPetugas: user?.name || 'Panitia PPDB', // Use logged-in user's name or default
              };
             setData(mappedData);
           } else {
@@ -115,9 +114,18 @@ const CetakBuktiDUPageContent = () => {
         }
       };
 
-      if (user) { // Fetch data only if user is authenticated
-          fetchData();
-      }
+        // No need to explicitly check for user here, useAuth handles the redirect loop
+        // If user context is null after loading, the redirect should happen in useAuth
+        // Only fetch if an ID exists and loading is done
+       if (daftarUlangId && !authLoading) {
+           fetchData();
+       } else if (!daftarUlangId) {
+           setError('ID Daftar Ulang tidak valid.');
+           setLoading(false);
+       }
+       // If authLoading is true, we wait for it to finish
+       // If user becomes null after loading, useAuth redirects
+
     }, [daftarUlangId, user, authLoading, isClient]); // Add dependencies
 
    const handlePrint = () => {
@@ -132,7 +140,7 @@ const CetakBuktiDUPageContent = () => {
 
       // Use a minimal delay to allow potential DOM updates if any
       setTimeout(() => {
-         const printWindow = window.open('', '_blank', 'height=800,width=1100,scrollbars=yes');
+         const printWindow = window.open('', '_blank', 'height=800,width=1200,scrollbars=yes'); // Adjusted default size
 
          if (!printWindow) {
            console.error('Failed to open print window. Pop-up might be blocked.');
@@ -160,7 +168,9 @@ const CetakBuktiDUPageContent = () => {
          const printSpecificStyles = `
            @media print {
              @page {
-               size: 330mm 216mm; /* F4 Landscape approx 13 x 8.5 inches */
+               /* F4 Landscape approx 330mm x 216mm or 13 x 8.5 inches */
+               /* Use inches for potentially better cross-browser consistency? */
+               size: 13in 8.5in;
                margin: 10mm 8mm 5mm 8mm; /* top, right, bottom, left */
              }
              html, body {
@@ -169,48 +179,58 @@ const CetakBuktiDUPageContent = () => {
                font-family: Arial, sans-serif; /* Use a common sans-serif font */
                font-size: 9pt; /* Base font size */
                line-height: 1.2;
-               -webkit-print-color-adjust: exact;
-               print-color-adjust: exact;
+               -webkit-print-color-adjust: exact !important; /* Force color printing */
+               print-color-adjust: exact !important;
                width: 100%;
-               height: auto;
+               height: 100%; /* Try 100% height for body */
                background-color: white !important; /* Ensure white background for print */
              }
              .no-print { display: none !important; }
+             /* Main container for the two receipts */
              .print-container {
-               display: flex !important;
-               justify-content: space-between !important;
-               align-items: stretch !important; /* Ensure items stretch vertically */
-               gap: 10mm !important; /* Gap between the two receipts */
-               width: 100% !important;
-               height: calc(100vh - 15mm) !important; /* Adjust height based on margins */
-               padding: 0 !important;
-               border: none !important;
-               box-shadow: none !important;
+                display: flex !important;
+                flex-direction: row !important; /* Side by side */
+                justify-content: space-between !important;
+                align-items: flex-start !important; /* Align items at the top */
+                gap: 10mm !important; /* Gap between the two receipts */
+                width: 100% !important; /* Full page width */
+                height: calc(100% - 15mm) !important; /* Attempt to fill page height minus margins */
+                padding: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                box-sizing: border-box !important;
+                /* Remove overflow hidden for print? */
              }
-             /* Style for each individual receipt within the container */
+             /* Style for each individual receipt wrapper */
              .receipt-outer-wrapper {
-                flex: 1 !important; /* Make each wrapper take equal space */
-                display: flex; /* Use flex to contain the receipt */
-                height: 100%; /* Ensure wrapper takes full height */
-                border: 1px solid black !important; /* Add border to the wrapper */
-                box-sizing: border-box !important;
+                 /* Let flex handle the width, or explicitly set */
+                 /* flex: 1 !important; */ /* Take equal space */
+                 width: calc(50% - 5mm) !important; /* Explicit width calculation */
+                 height: 100% !important; /* Make wrapper take full calculated height */
+                 border: 1px solid black !important; /* Add border to the wrapper */
+                 box-sizing: border-box !important;
+                 display: flex !important; /* Use flex here */
+                 flex-direction: column !important; /* Stack header/content/footer vertically */
+                 page-break-inside: avoid !important; /* Try to prevent breaking inside wrapper */
+                 overflow: hidden; /* Hide overflow within the bordered box */
              }
+             /* Style for the content inside the wrapper */
              .receipt-container {
-                width: 100% !important; /* Receipt container takes full width of its wrapper */
-                height: 100% !important; /* Receipt container takes full height */
-                border: none !important; /* Remove border from inner container if exists */
-                padding: 4mm !important; /* Apply padding inside the border */
-                box-sizing: border-box !important;
-                display: flex;
-                flex-direction: column; /* Stack header, content, footer vertically */
-                overflow: hidden !important; /* Prevent overflow */
-                break-inside: avoid !important;
-                font-size: 9pt !important;
-                line-height: 1.2 !important;
+                 padding: 4mm !important; /* Apply padding inside the border */
+                 box-sizing: border-box !important;
+                 width: 100% !important;
+                 height: 100% !important; /* Occupy full height of wrapper */
+                 display: flex !important;
+                 flex-direction: column !important; /* Stack vertically */
+                 font-size: 9pt !important;
+                 line-height: 1.2 !important;
+                 border: none !important; /* No border on inner container */
+                 page-break-inside: avoid !important;
+                 background-color: white !important;
              }
-             /* Specific adjustments based on new component structure */
-             .receipt-content { flex-grow: 1; } /* Allow content to take available space */
-             .receipt-footer { margin-top: auto; padding-top: 2mm; } /* Push footer to bottom */
+             /* Ensure content grows and footer sticks to bottom */
+             .receipt-content { flex-grow: 1 !important; } /* Allow content to take available space */
+             .receipt-footer { margin-top: auto !important; padding-top: 2mm !important; flex-shrink: 0 !important; } /* Push footer to bottom */
 
              /* Fine-tune spacing and font sizes based on the reference image */
              .receipt-container h1, .receipt-container h2, .receipt-container h3 { margin-bottom: 1mm; line-height: 1.1; font-weight: bold; }
@@ -220,50 +240,66 @@ const CetakBuktiDUPageContent = () => {
              .receipt-container .font-bold { font-weight: bold !important; }
              .receipt-container .font-semibold { font-weight: 600 !important; }
              .receipt-container .font-medium { font-weight: 500 !important; }
+             .receipt-container .underline { text-decoration: underline !important; }
 
              /* Adjust DataRow specifically */
-             .receipt-container .flex.mb-0_5 { margin-bottom: 0 !important; } /* Remove bottom margin */
-             .receipt-container span.w-\\[100px\\] { width: 100px !important; } /* Match label width */
-             .receipt-container span.mr-2 { margin-right: 8px !important; } /* Adjust colon spacing */
+             .receipt-container .flex.mb-0_5 { margin-bottom: 0 !important; }
+             .receipt-container span.w-\\[100px\\] { width: 100px !important; }
+             .receipt-container span.mr-2 { margin-right: 8px !important; }
 
              /* Adjust ChecklistItem */
              .receipt-container .flex.items-center.mb-0 { margin-bottom: 0 !important; }
              .receipt-container .w-3.h-3.mr-1 { width: 9pt !important; height: 9pt !important; margin-right: 4px !important; }
+             .receipt-container .text-black { color: black !important; } /* Ensure checkmark is black */
+             .receipt-container .text-gray-500 { color: #6b7280 !important; } /* Ensure empty box is gray */
 
              /* Adjust Header and Title Styling */
-              .receipt-container .border-b-2.border-black { border-bottom-width: 2px !important; }
-              .receipt-container .h-\\[2px\\].bg-red-600 { height: 1.5pt !important; background-color: red !important; }
+              .receipt-container .border-b-2.border-black { border-bottom-width: 2px !important; border-color: black !important; }
+              .receipt-container .h-\\[2px\\].bg-red-600 { height: 1.5pt !important; background-color: #dc2626 !important; print-color-adjust: exact !important; } /* Red color */
               .receipt-container .w-1\\/3 { width: 33.33% !important; }
-              .receipt-container .mx-auto { margin-left: auto; margin-right: auto; }
+              .receipt-container .mx-auto { margin-left: auto !important; margin-right: auto !important; }
+              .receipt-container .text-green-700 { color: #047857 !important; } /* Green color */
+              .receipt-container .bg-transparent { background-color: transparent !important; }
 
              /* Adjust Footer Box */
-             .receipt-container .border.border-black.p-1\\.5 { border-width: 1px !important; padding: 1mm !important; background-color: #f3f4f6 !important; } /* Added background color */
+             .receipt-container .border.border-black.p-1\\.5 {
+                border-width: 1px !important;
+                border-color: black !important;
+                padding: 1mm !important;
+                background-color: #f3f4f6 !important; /* Light gray background */
+                print-color-adjust: exact !important; /* Ensure background prints */
+             }
              .receipt-container .text-\\[8pt\\] { font-size: 7pt !important; line-height: 1.1 !important; }
+             .receipt-container .small-print { font-size: 7pt !important; line-height: 1.1 !important; } /* Ensure class applies */
 
              /* Adjust Signature */
-             .receipt-container .signature-space { height: 6mm !important; } /* Adjust space for signature */
-             .receipt-container .receipt-signature { margin-top: 1mm !important; }
+             .receipt-container .signature-space { height: 8mm !important; } /* Increased space for signature */
+             .receipt-container .receipt-signature { margin-top: 1mm !important; } /* Reduced margin above signature block */
            }
            /* Screen styles for preview */
            @media screen {
+               body { background-color: #f3f4f6; /* Light gray background for screen */ }
                .print-container {
-                   max-width: 1100px; /* Limit width on screen */
-                   margin-left: auto;
-                   margin-right: auto;
-                   align-items: stretch; /* Ensure height consistency */
-                   min-height: 216mm; /* Simulate approximate F4 height */
+                   max-width: 1200px; /* Limit width on screen */
+                   margin: 1rem auto; /* Center on screen */
+                   align-items: flex-start; /* Align items at the top */
                    padding: 1rem; /* Add padding for screen view */
-                   background-color: #f3f4f6; /* Light background for contrast */
+                   background-color: transparent; /* Transparent background for container on screen */
+                   min-height: auto; /* Don't force page height on screen */
                }
                .receipt-outer-wrapper {
                    flex: 1;
-                   margin-bottom: 1rem;
+                   margin-bottom: 1rem; /* Space below receipts on screen */
                    background-color: white;
                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                   min-height: 200mm; /* Minimum height for better preview */
+                   height: auto; /* Allow content to determine height */
+                   width: 48%; /* Approximate width for side-by-side view */
+                   overflow: visible; /* Allow content to be visible on screen */
                }
                .receipt-container {
-                   height: auto; /* Allow content to determine height on screen */
-                   min-height: 200mm; /* Minimum height for better preview */
+                    height: auto; /* Let content define height */
+                    overflow: visible; /* Allow content to be visible on screen */
                }
            }
          `;
@@ -274,7 +310,7 @@ const CetakBuktiDUPageContent = () => {
            const printDoc = printWindow.document;
 
            printDoc.open();
-           printDoc.write(`<!DOCTYPE html><html><head><title>Bukti Daftar Ulang - ${data?.namaPendaftar || daftarUlangId}</title><style>${styles}${printSpecificStyles}</style></head><body><div class="print-container">${printContent.innerHTML}</div></body></html>`);
+           printDoc.write(`<!DOCTYPE html><html lang="id"><head><title>Bukti Daftar Ulang - ${data?.namaPendaftar || daftarUlangId}</title><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>${styles}${printSpecificStyles}</style></head><body><div class="print-container">${printContent.innerHTML}</div></body></html>`);
            printDoc.close();
 
            setTimeout(() => {
@@ -293,7 +329,7 @@ const CetakBuktiDUPageContent = () => {
                  // Optionally close window after print attempt:
                  // setTimeout(() => { if (printWindow && !printWindow.closed) printWindow.close(); }, 2000);
              }
-           }, 500); // Delay to allow content rendering
+           }, 1000); // Increased delay slightly to ensure styles apply
 
          } catch (writeError) {
            console.error("Error writing to print window:", writeError);
@@ -304,32 +340,45 @@ const CetakBuktiDUPageContent = () => {
    };
 
     // Use authLoading state for the initial loading indicator
-    if (authLoading || (loading && !error && !user && isClient)) { // Check isClient here
-      return (
-          <div className="flex justify-center items-center h-screen">
-              <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-              <span>Memuat data bukti daftar ulang...</span>
-          </div>
-      );
+     if (!isClient || authLoading) { // Also check isClient here
+       return (
+           <div className="flex justify-center items-center h-screen">
+               <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+               <span>Memuat data bukti daftar ulang...</span>
+           </div>
+       );
+     }
+
+    // If loading is done but user is null (and not on login page), useAuth should redirect.
+    // Show a minimal loading/redirecting state while that happens.
+    if (!user) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+                <span>Mengarahkan...</span>
+            </div>
+        );
     }
 
+    // If error occurred during data fetching
     if (error) {
       return <div className="flex justify-center items-center h-screen text-red-600"><p>{error}</p></div>;
     }
 
+    // If data fetching is finished but data is still null (shouldn't normally happen if fetch logic is correct)
     if (!data) {
-      // This might happen briefly if user logs out, or if fetch failed silently
       return (
            <div className="flex justify-center items-center h-screen">
-               <p>Data tidak tersedia atau Anda belum login.</p>
+               <p>Data tidak ditemukan atau gagal dimuat.</p>
            </div>
       );
     }
 
+    // Render the main content if data is available and user is authenticated
     return (
       // Added min-h-screen and flex container for better screen view centering
-      <div className="bg-gray-100 p-4 print:bg-white print:p-0 min-h-screen flex flex-col">
-         <div className="mb-4 flex justify-between items-center no-print max-w-5xl mx-auto w-full"> {/* Ensure controls take full width */}
+      <div className="p-4 print:p-0 min-h-screen flex flex-col">
+         <div className="mb-4 flex justify-between items-center no-print max-w-6xl mx-auto w-full"> {/* Ensure controls take full width */}
              <Button variant="outline" size="sm" onClick={() => router.back()}>
                  <ArrowLeft className="mr-2 h-4 w-4" /> Kembali
              </Button>
@@ -337,13 +386,10 @@ const CetakBuktiDUPageContent = () => {
                  <Printer className="mr-2 h-4 w-4" /> Cetak Bukti (F4 Landscape)
              </Button>
          </div>
-         {/* Apply max-width only for screen view, print styles override it */}
-        <div ref={printRef} className="print-container flex-grow"> {/* Added flex-grow */}
+         {/* Container for the print content */}
+        <div ref={printRef} className="print-preview-container flex-grow">
           {/* Pass the fetched data (including namaPetugas) to the print component */}
-          {/* Wrap each receipt in a div for flexbox control */}
-           <div className="receipt-outer-wrapper">
-               <BuktiDaftarUlangPrint data={data} />
-           </div>
+          <BuktiDaftarUlangPrint data={data} />
         </div>
       </div>
     );
@@ -352,48 +398,25 @@ const CetakBuktiDUPageContent = () => {
 // Component to handle authentication check before rendering content
 const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, loading: authLoading } = useAuth();
-    const router = useRouter();
-    const pathname = usePathname(); // Use usePathname hook
     const [isClient, setIsClient] = useState(false);
 
      useEffect(() => {
          setIsClient(true);
      }, []);
 
-    useEffect(() => {
-         if (!isClient || authLoading) return; // Don't run on server or while loading
-
-        // Only redirect if not already on login page and auth check is complete and user is null
-        if (!user && pathname !== '/login' && !pathname?.startsWith('/form-pendaftaran')) { // Allow access to form-pendaftaran
-            console.log("AuthCheck: Not authenticated, redirecting to login.");
-            // Store the intended redirect path *before* navigating
-            const redirectPath = window.location.pathname + window.location.search;
-            sessionStorage.setItem('redirectAfterLogin', redirectPath); // Use sessionStorage
-            router.push('/login'); // Redirect to login
-        }
-    }, [authLoading, user, router, pathname, isClient]);
-
     // Show loading indicator until client-side mount and auth check complete
-    if (!isClient || authLoading) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-                <span>Memeriksa autentikasi...</span>
-            </div>
-        );
-    }
-
-    // If not logged in and not loading, show minimal content while redirect happens (unless on allowed public page)
-    if (!user && pathname !== '/login' && !pathname?.startsWith('/form-pendaftaran')) {
+     if (!isClient || authLoading) {
          return (
              <div className="flex justify-center items-center h-screen">
-                 <p>Mengarahkan ke halaman login...</p>
+                 <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+                 <span>Memeriksa autentikasi...</span>
              </div>
          );
-    }
+     }
 
-    // If authenticated and not loading, or on an allowed public page, render the page content
-    return <>{children}</>;
+    // If not logged in and not loading, useAuth hook handles the redirect.
+    // Render children directly if authenticated.
+    return <>{user ? children : null}</>; // Render children only if user exists after loading
 };
 
 
@@ -407,5 +430,3 @@ const CetakBuktiDUPage = () => {
 };
 
 export default CetakBuktiDUPage;
-
-
