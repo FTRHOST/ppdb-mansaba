@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -24,10 +25,10 @@ function Calendar({
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
-        // Show default label again
+        // Use default label
         caption_label: "text-sm font-medium",
-        // Remove dropdowns container class
-        // caption_dropdowns: "flex gap-1 items-center",
+        // Remove dropdowns container class if needed
+        // caption_dropdowns: "flex gap-1 items-center", // Keep default if not customizing heavily
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
@@ -58,8 +59,7 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        // Remove custom Dropdown component
-        // Dropdown: (dropdownProps: DropdownProps) => { ... },
+        // Remove custom Dropdown component entirely
         IconLeft: ({ className, ...props }) => (
           <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
         ),
@@ -67,6 +67,8 @@ function Calendar({
           <ChevronRight className={cn("h-4 w-4", className)} {...props} />
         ),
       }}
+      // Ensure captionLayout uses buttons if default isn't sufficient
+      // captionLayout="buttons" // Or remove if default is 'buttons'
       {...props}
     />
   )
@@ -74,3 +76,4 @@ function Calendar({
 Calendar.displayName = "Calendar"
 
 export { Calendar }
+
