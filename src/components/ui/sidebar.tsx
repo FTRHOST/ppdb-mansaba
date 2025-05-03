@@ -145,8 +145,8 @@ const SidebarProvider = React.forwardRef<
 
      // Render null or a placeholder on the server/before hydration
      if (!isClient) {
-         // Return a minimal div or null to match server render
-         return <div ref={ref} className={cn("group/sidebar-wrapper flex min-h-svh w-full", className)} {...props}></div>;
+         // Return null to avoid hydration errors. The client will render the full component.
+         return null;
      }
 
 
