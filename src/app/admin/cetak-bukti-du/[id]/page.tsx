@@ -171,7 +171,10 @@ const CetakBuktiDUPageContent = () => {
              /* Adjust receipt container for proportion: Less wide, potentially taller */
              .receipt-container { flex: 1 !important; max-width: calc(50% - 6mm) !important; /* Reduce width slightly, adjust gap in container */ border: 1px solid black !important; padding: 4mm 4mm 4mm 4mm !important; /* Slightly more vertical padding */ box-sizing: border-box !important; height: 100% !important; /* Take full height of flex item */ display: flex; flex-direction: column; /* Allow content to push footer down */ overflow: hidden !important; break-inside: avoid !important; font-size: 9pt !important; line-height: 1.2 !important; }
              .receipt-content { flex-grow: 1; } /* Make main content area grow */
-             .receipt-footer { margin-top: auto; } /* Push footer elements to bottom */
+             .receipt-footer { margin-top: auto; /* Push footer elements to bottom */ }
+             /* Ensure signature doesn't get pushed too far down by the content */
+             .receipt-signature { margin-top: 4mm !important; /* Add some top margin to signature, less than previous auto */ }
+
 
              .receipt-container h1, .receipt-container h2, .receipt-container h3 { margin-bottom: 1.5mm; line-height: 1.2; } /* Slightly more space */
              /* Specific text size adjustments */
@@ -203,7 +206,7 @@ const CetakBuktiDUPageContent = () => {
              .receipt-container .text-\\[9pt\\] { font-size: 9pt !important; }
              .receipt-container .text-\\[8pt\\] { font-size: 8pt !important; }
              .receipt-container .small-print { font-size: 7pt !important; line-height: 1.1 !important; } /* Footer box text */
-             .receipt-container .signature-space { height: 6mm !important; } /* Increase signature space */
+             .receipt-container .signature-space { height: 8mm !important; } /* Increased signature space */
            }
            @media screen {
                .print-container {
@@ -257,7 +260,7 @@ const CetakBuktiDUPageContent = () => {
    };
 
     // Use authLoading state for the initial loading indicator
-    if (authLoading || (loading && !error && !user)) { // Check user presence as well
+    if (authLoading || (loading && !error && !user && isClient)) { // Check isClient here
       return (
           <div className="flex justify-center items-center h-screen">
               <Loader2 className="mr-2 h-8 w-8 animate-spin" />
@@ -323,6 +326,7 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         }
     }, [authLoading, user, router, pathname, isClient]);
 
+    // Show loading indicator until client-side mount and auth check complete
     if (!isClient || authLoading) {
         return (
             <div className="flex justify-center items-center h-screen">
@@ -356,4 +360,5 @@ const CetakBuktiDUPage = () => {
 };
 
 export default CetakBuktiDUPage;
+
 

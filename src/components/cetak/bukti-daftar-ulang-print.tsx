@@ -145,11 +145,11 @@ const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean; namaPet
             </div>
 
             {/* Signature - Adjusted margin, size */}
-            <div className="flex justify-end mt-2 print:mt-2">
+            <div className="receipt-signature flex justify-end mt-2 print:mt-2">
                 <div className="text-center text-xs print:text-[9pt]">
                     <p>{tempatDaftar}, {formattedTanggal}</p>
                     <p>Panitia PPDB</p>
-                    <div className="h-6 print:h-5 signature-space"></div>
+                    <div className="h-8 print:h-8 signature-space"></div> {/* Adjusted height */}
                     <p className="font-bold underline print:font-bold">( {petugasNamaDisplay} )</p>
                 </div>
             </div>
