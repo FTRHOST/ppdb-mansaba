@@ -156,74 +156,118 @@ const CetakBuktiDUPageContent = () => {
              console.log('Collected styles for print window.');
          } catch (e) { console.error("Error collecting styles:", e); }
 
-         // Define F4 Landscape size in mm (approx 330mm x 216mm)
-         // Adjust margins, paddings, font sizes for better F4 fit and proportion
+         // Adjusted printSpecificStyles to match the new receipt component and target F4 Landscape
          const printSpecificStyles = `
            @media print {
              @page {
                size: 330mm 216mm; /* F4 Landscape approx 13 x 8.5 inches */
-               margin: 10mm 8mm 5mm 8mm; /* top, right, bottom, left - Adjusted horizontal margins */
+               margin: 10mm 8mm 5mm 8mm; /* top, right, bottom, left */
              }
-             html, body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 9pt; line-height: 1.2; -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 100%; height: auto; }
+             html, body {
+               margin: 0;
+               padding: 0;
+               font-family: Arial, sans-serif; /* Use a common sans-serif font */
+               font-size: 9pt; /* Base font size */
+               line-height: 1.2;
+               -webkit-print-color-adjust: exact;
+               print-color-adjust: exact;
+               width: 100%;
+               height: auto;
+               background-color: white !important; /* Ensure white background for print */
+             }
              .no-print { display: none !important; }
-             /* Make the container take full width and height */
-             .print-container { display: flex !important; justify-content: space-between !important; align-items: stretch !important; gap: 10mm !important; width: 100% !important; height: calc(100vh - 15mm) !important; /* Adjust height based on margins */ padding: 0 !important; border: none !important; box-shadow: none !important; }
-             /* Adjust receipt container for proportion: Less wide, potentially taller */
-             .receipt-container { flex: 1 !important; max-width: calc(50% - 6mm) !important; /* Reduce width slightly, adjust gap in container */ border: 1px solid black !important; padding: 4mm 4mm 4mm 4mm !important; /* Slightly more vertical padding */ box-sizing: border-box !important; height: 100% !important; /* Take full height of flex item */ display: flex; flex-direction: column; /* Allow content to push footer down */ overflow: hidden !important; break-inside: avoid !important; font-size: 9pt !important; line-height: 1.2 !important; }
-             .receipt-content { flex-grow: 1; } /* Make main content area grow */
-             .receipt-footer { margin-top: auto; /* Push footer elements to bottom */ }
-             /* Ensure signature doesn't get pushed too far down by the content */
-             .receipt-signature { margin-top: 4mm !important; /* Add some top margin to signature, less than previous auto */ }
+             .print-container {
+               display: flex !important;
+               justify-content: space-between !important;
+               align-items: stretch !important; /* Ensure items stretch vertically */
+               gap: 10mm !important; /* Gap between the two receipts */
+               width: 100% !important;
+               height: calc(100vh - 15mm) !important; /* Adjust height based on margins */
+               padding: 0 !important;
+               border: none !important;
+               box-shadow: none !important;
+             }
+             /* Style for each individual receipt within the container */
+             .receipt-outer-wrapper {
+                flex: 1 !important; /* Make each wrapper take equal space */
+                display: flex; /* Use flex to contain the receipt */
+                height: 100%; /* Ensure wrapper takes full height */
+                border: 1px solid black !important; /* Add border to the wrapper */
+                box-sizing: border-box !important;
+             }
+             .receipt-container {
+                width: 100% !important; /* Receipt container takes full width of its wrapper */
+                height: 100% !important; /* Receipt container takes full height */
+                border: none !important; /* Remove border from inner container if exists */
+                padding: 4mm !important; /* Apply padding inside the border */
+                box-sizing: border-box !important;
+                display: flex;
+                flex-direction: column; /* Stack header, content, footer vertically */
+                overflow: hidden !important; /* Prevent overflow */
+                break-inside: avoid !important;
+                font-size: 9pt !important;
+                line-height: 1.2 !important;
+             }
+             /* Specific adjustments based on new component structure */
+             .receipt-content { flex-grow: 1; } /* Allow content to take available space */
+             .receipt-footer { margin-top: auto; padding-top: 2mm; } /* Push footer to bottom */
 
-
-             .receipt-container h1, .receipt-container h2, .receipt-container h3 { margin-bottom: 1.5mm; line-height: 1.2; } /* Slightly more space */
-             /* Specific text size adjustments */
+             /* Fine-tune spacing and font sizes based on the reference image */
+             .receipt-container h1, .receipt-container h2, .receipt-container h3 { margin-bottom: 1mm; line-height: 1.1; font-weight: bold; }
              .receipt-container .text-xs { font-size: 9pt !important; line-height: 1.2 !important; }
              .receipt-container .text-sm { font-size: 10pt !important; line-height: 1.2 !important; }
              .receipt-container .text-base { font-size: 11pt !important; line-height: 1.2 !important; }
              .receipt-container .font-bold { font-weight: bold !important; }
              .receipt-container .font-semibold { font-weight: 600 !important; }
              .receipt-container .font-medium { font-weight: 500 !important; }
-             .receipt-container .mb-0_5 { margin-bottom: 0.8mm !important; } /* Slightly more margin */
-             .receipt-container .mb-1 { margin-bottom: 1.2mm !important; }
-             .receipt-container .mt-1 { margin-top: 1.2mm !important; }
-             .receipt-container .mt-2 { margin-top: 2.4mm !important; }
-             .receipt-container .my-1 { margin-top: 1.2mm !important; margin-bottom: 1.2mm !important; }
-             .receipt-container .pb-0_5 { padding-bottom: 0.8mm !important; }
-             .receipt-container .pb-1 { padding-bottom: 1.2mm !important; }
-             .receipt-container .mr-1 { margin-right: 1.2mm !important; }
-             .receipt-container .ml-1 { margin-left: 1.2mm !important; }
-             .receipt-container .ml-2 { margin-left: 2.4mm !important; }
-             /* Icon/element size adjustments */
-             .receipt-container .w-10 { width: 24pt !important; height: 24pt !important; } /* Slightly larger logo */
-             .receipt-container .h-10 { height: 24pt !important; }
-             .receipt-container .w-6 { width: 14pt !important; height: 14pt !important; } /* Larger logo icon */
-             .receipt-container .h-6 { height: 14pt !important; }
-             .receipt-container .w-3 { width: 9pt !important; height: 9pt !important; } /* Checklist icon size */
-             .receipt-container .h-3 { height: 9pt !important; }
-             .receipt-container .w-\\[80px\\] { width: 80px !important; } /* Keep label width consistent */
-             .receipt-container .text-\\[10pt\\] { font-size: 10pt !important; } /* Smaller header text if needed */
-             .receipt-container .text-\\[9pt\\] { font-size: 9pt !important; }
-             .receipt-container .text-\\[8pt\\] { font-size: 8pt !important; }
-             .receipt-container .small-print { font-size: 7pt !important; line-height: 1.1 !important; } /* Footer box text */
-             .receipt-container .signature-space { height: 8mm !important; } /* Increased signature space */
+
+             /* Adjust DataRow specifically */
+             .receipt-container .flex.mb-0_5 { margin-bottom: 0 !important; } /* Remove bottom margin */
+             .receipt-container span.w-\\[100px\\] { width: 100px !important; } /* Match label width */
+             .receipt-container span.mr-2 { margin-right: 8px !important; } /* Adjust colon spacing */
+
+             /* Adjust ChecklistItem */
+             .receipt-container .flex.items-center.mb-0 { margin-bottom: 0 !important; }
+             .receipt-container .w-3.h-3.mr-1 { width: 9pt !important; height: 9pt !important; margin-right: 4px !important; }
+
+             /* Adjust Header and Title Styling */
+              .receipt-container .border-b-2.border-black { border-bottom-width: 2px !important; }
+              .receipt-container .h-\\[2px\\].bg-red-600 { height: 1.5pt !important; background-color: red !important; }
+              .receipt-container .w-1\\/3 { width: 33.33% !important; }
+              .receipt-container .mx-auto { margin-left: auto; margin-right: auto; }
+
+             /* Adjust Footer Box */
+             .receipt-container .border.border-black.p-1\\.5 { border-width: 1px !important; padding: 1mm !important; background-color: #f3f4f6 !important; } /* Added background color */
+             .receipt-container .text-\\[8pt\\] { font-size: 7pt !important; line-height: 1.1 !important; }
+
+             /* Adjust Signature */
+             .receipt-container .signature-space { height: 6mm !important; } /* Adjust space for signature */
+             .receipt-container .receipt-signature { margin-top: 1mm !important; }
            }
+           /* Screen styles for preview */
            @media screen {
                .print-container {
-                   max-width: 1100px; /* Keep screen width reasonable */
+                   max-width: 1100px; /* Limit width on screen */
                    margin-left: auto;
                    margin-right: auto;
-                   align-items: stretch; /* Ensure containers take full height in flex */
+                   align-items: stretch; /* Ensure height consistency */
+                   min-height: 216mm; /* Simulate approximate F4 height */
+                   padding: 1rem; /* Add padding for screen view */
+                   background-color: #f3f4f6; /* Light background for contrast */
                }
-                .receipt-container {
-                    /* Simulate aspect ratio for screen view, adjust height */
-                     height: calc(216mm * 0.95); /* Slightly taller simulation */
-                     overflow-y: auto;
-                     max-width: 480px; /* Slightly narrower on screen */
-                     margin-bottom: 1rem; /* Add spacing on screen */
-                }
+               .receipt-outer-wrapper {
+                   flex: 1;
+                   margin-bottom: 1rem;
+                   background-color: white;
+                   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+               }
+               .receipt-container {
+                   height: auto; /* Allow content to determine height on screen */
+                   min-height: 200mm; /* Minimum height for better preview */
+               }
            }
          `;
+
 
          try {
            const originalTitle = document.title;
@@ -296,7 +340,10 @@ const CetakBuktiDUPageContent = () => {
          {/* Apply max-width only for screen view, print styles override it */}
         <div ref={printRef} className="print-container flex-grow"> {/* Added flex-grow */}
           {/* Pass the fetched data (including namaPetugas) to the print component */}
-          <BuktiDaftarUlangPrint data={data} />
+          {/* Wrap each receipt in a div for flexbox control */}
+           <div className="receipt-outer-wrapper">
+               <BuktiDaftarUlangPrint data={data} />
+           </div>
         </div>
       </div>
     );
@@ -317,7 +364,7 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
          if (!isClient || authLoading) return; // Don't run on server or while loading
 
         // Only redirect if not already on login page and auth check is complete and user is null
-        if (!user && pathname !== '/login') {
+        if (!user && pathname !== '/login' && !pathname?.startsWith('/form-pendaftaran')) { // Allow access to form-pendaftaran
             console.log("AuthCheck: Not authenticated, redirecting to login.");
             // Store the intended redirect path *before* navigating
             const redirectPath = window.location.pathname + window.location.search;
@@ -336,8 +383,8 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         );
     }
 
-    // If not logged in and not loading, show minimal content while redirect happens
-    if (!user) {
+    // If not logged in and not loading, show minimal content while redirect happens (unless on allowed public page)
+    if (!user && pathname !== '/login' && !pathname?.startsWith('/form-pendaftaran')) {
          return (
              <div className="flex justify-center items-center h-screen">
                  <p>Mengarahkan ke halaman login...</p>
@@ -345,7 +392,7 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
          );
     }
 
-    // If authenticated and not loading, render the page content
+    // If authenticated and not loading, or on an allowed public page, render the page content
     return <>{children}</>;
 };
 
