@@ -1,7 +1,7 @@
 
 'use client';
 
-import type React from 'react';
+import React from 'react'; // Added missing React import
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { z } from 'zod';
@@ -108,153 +108,152 @@ const steps = [
   { id: 'sekolahAsal', title: 'Data Sekolah Asal & Lainnya', icon: Building, fields: ['namaSekolahAsal', 'alamatSekolahAsal', 'nisn', 'punyaPiagam', 'motivasi'] },
 ];
 
+// Component to handle client-side rendering logic
+const FormPendaftaranClient = () => {
+    const [currentStep, setCurrentStep] = useState(0);
+    const [mounted, setMounted] = useState(false);
 
-export default function FormPendaftaranPage() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [mounted, setMounted] = useState(false); // State to track component mount for effects
+    const form = useForm<FormSchemaType>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            rekomendasiPendaftaran: '',
+            jalurPendaftaran: undefined,
+            programPeminatan: undefined,
+            nama: '',
+            jenisKelamin: undefined,
+            tempatLahir: '',
+            tanggalLahir: undefined,
+            noHp: '',
+            tinggal: undefined,
+            dukuhJalan: '',
+            desa: '',
+            rt: '',
+            rw: '',
+            kecamatan: '',
+            kabupaten: '',
+            provinsi: '',
+            namaAyah: '',
+            pendidikanAyah: undefined,
+            pekerjaanAyah: '',
+            namaIbu: '',
+            pendidikanIbu: undefined,
+            pekerjaanIbu: '',
+            alamatOrangtua: '',
+            noHpAyah: '',
+            noHpIbu: '',
+            punyaSaudaraDiMansaba: undefined,
+            namaWali: '',
+            hubunganWali: '',
+            pendidikanWali: undefined,
+            pekerjaanWali: '',
+            alamatWali: '',
+            noHpWali: '',
+            namaSekolahAsal: '',
+            alamatSekolahAsal: '',
+            nisn: '',
+            punyaPiagam: undefined,
+            motivasi: '',
+        },
+    });
 
-  const form = useForm<FormSchemaType>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      rekomendasiPendaftaran: '',
-      jalurPendaftaran: undefined,
-      programPeminatan: undefined,
-      nama: '',
-      jenisKelamin: undefined,
-      tempatLahir: '',
-      tanggalLahir: undefined,
-      noHp: '',
-      tinggal: undefined,
-      dukuhJalan: '',
-      desa: '',
-      rt: '',
-      rw: '',
-      kecamatan: '',
-      kabupaten: '',
-      provinsi: '',
-      namaAyah: '',
-      pendidikanAyah: undefined,
-      pekerjaanAyah: '',
-      namaIbu: '',
-      pendidikanIbu: undefined,
-      pekerjaanIbu: '',
-      alamatOrangtua: '',
-      noHpAyah: '',
-      noHpIbu: '',
-      punyaSaudaraDiMansaba: undefined,
-      namaWali: '',
-      hubunganWali: '',
-      pendidikanWali: undefined,
-      pekerjaanWali: '',
-      alamatWali: '',
-      noHpWali: '',
-      namaSekolahAsal: '',
-      alamatSekolahAsal: '',
-      nisn: '',
-      punyaPiagam: undefined,
-      motivasi: '',
-    },
-  });
+    // Initialize derived states with null or appropriate defaults to avoid hydration mismatch
+    const [tempatTanggalLahir, setTempatTanggalLahir] = useState<string | null>(null);
+    const [alamatLengkap, setAlamatLengkap] = useState<string | null>(null);
 
-  // Initialize derived states with empty strings or appropriate defaults
-  // Initialize derived states with null or appropriate defaults to avoid hydration mismatch
-  const [tempatTanggalLahir, setTempatTanggalLahir] = useState<string | null>(null);
-  const [alamatLengkap, setAlamatLengkap] = useState<string | null>(null);
+    // Watch form fields to update derived values
+    const watchedTempatLahir = form.watch('tempatLahir');
+    const watchedTanggalLahir = form.watch('tanggalLahir');
+    const watchedDukuhJalan = form.watch('dukuhJalan');
+    const watchedDesa = form.watch('desa');
+    const watchedRt = form.watch('rt');
+    const watchedRw = form.watch('rw');
+    const watchedKecamatan = form.watch('kecamatan');
+    const watchedKabupaten = form.watch('kabupaten');
+    const watchedProvinsi = form.watch('provinsi');
+    const watchedTinggal = form.watch('tinggal');
 
-  // Watch form fields to update derived values
-  const watchedTempatLahir = form.watch('tempatLahir');
-  const watchedTanggalLahir = form.watch('tanggalLahir');
-  const watchedDukuhJalan = form.watch('dukuhJalan');
-  const watchedDesa = form.watch('desa');
-  const watchedRt = form.watch('rt');
-  const watchedRw = form.watch('rw');
-  const watchedKecamatan = form.watch('kecamatan');
-  const watchedKabupaten = form.watch('kabupaten');
-  const watchedProvinsi = form.watch('provinsi');
-  const watchedTinggal = form.watch('tinggal');
+    // Effect to signal mount completion
+    useEffect(() => {
+        setMounted(true); // Signal that the component has mounted for effects
+    }, []);
 
-  // Effect to signal mount completion
-  useEffect(() => {
-    setMounted(true); // Signal that the component has mounted for effects
-  }, []);
+    // Effect for Tempat, Tanggal Lahir - runs only on client after mount
+    useEffect(() => {
+        if (!mounted) return; // Don't run before mount
+        if (watchedTempatLahir && watchedTanggalLahir) {
+            try {
+                const formattedDate = format(watchedTanggalLahir, 'dd MMMM yyyy', { locale: localeId });
+                setTempatTanggalLahir(`${watchedTempatLahir}, ${formattedDate}`);
+            } catch (error) {
+                console.error("Error formatting date:", error);
+                setTempatTanggalLahir(watchedTempatLahir); // Fallback
+            }
+        } else {
+            setTempatTanggalLahir(watchedTempatLahir || '');
+        }
+    }, [watchedTempatLahir, watchedTanggalLahir, mounted]);
 
-  // Effect for Tempat, Tanggal Lahir - runs only on client after mount
-  useEffect(() => {
-     if (!mounted) return; // Don't run before mount
-    if (watchedTempatLahir && watchedTanggalLahir) {
-      try {
-        const formattedDate = format(watchedTanggalLahir, 'dd MMMM yyyy', { locale: localeId });
-        setTempatTanggalLahir(`${watchedTempatLahir}, ${formattedDate}`);
-      } catch (error) {
-        console.error("Error formatting date:", error);
-        setTempatTanggalLahir(watchedTempatLahir); // Fallback
-      }
-    } else {
-      setTempatTanggalLahir(watchedTempatLahir || '');
+    // Effect for Alamat Lengkap - runs only on client after mount
+    useEffect(() => {
+        if (!mounted) return; // Don't run before mount
+        const rtRwString = (watchedRt && watchedRw) ? `RT ${watchedRt.padStart(3, '0')} / RW ${watchedRw.padStart(3, '0')}` : '';
+        const parts = [
+            watchedDukuhJalan,
+            watchedDesa,
+            rtRwString,
+            watchedKecamatan ? `Kec. ${watchedKecamatan}` : '',
+            watchedKabupaten ? `Kab. ${watchedKabupaten}` : '',
+            watchedProvinsi ? `Prov. ${watchedProvinsi}` : '',
+        ];
+        setAlamatLengkap(parts.filter(Boolean).join(', '));
+    }, [watchedDukuhJalan, watchedDesa, watchedRt, watchedRw, watchedKecamatan, watchedKabupaten, watchedProvinsi, mounted]);
+
+    // Handle form submission
+    async function onSubmit(values: FormSchemaType) {
+        // Convert tanggalLahir to YYYY-MM-DD for database
+        const dataToSubmit = {
+            ...values,
+            tanggalLahir: values.tanggalLahir ? format(values.tanggalLahir, 'yyyy-MM-dd') : null,
+            tempatTanggalLahir: tempatTanggalLahir, // Send derived value
+            alamatLengkap: alamatLengkap, // Send derived value
+            // Ensure optional fields are handled correctly
+            noHpAyah: values.noHpAyah || null,
+            noHpIbu: values.noHpIbu || null,
+            namaWali: values.tinggal === 'Bersama Wali' ? values.namaWali : null,
+            hubunganWali: values.tinggal === 'Bersama Wali' ? values.hubunganWali : null,
+            pendidikanWali: values.tinggal === 'Bersama Wali' ? values.pendidikanWali : null,
+            pekerjaanWali: values.tinggal === 'Bersama Wali' ? values.pekerjaanWali : null,
+            alamatWali: values.tinggal === 'Bersama Wali' ? values.alamatWali : null,
+            noHpWali: values.tinggal === 'Bersama Wali' ? values.noHpWali || null : null,
+            nisn: values.nisn || null,
+            punyaPiagam: values.punyaPiagam || null,
+        };
+
+        console.log('Form Submitted Data:', dataToSubmit);
+
+        // --- TODO: Replace with actual API call ---
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            toast({
+                title: "Pendaftaran Berhasil!",
+                description: "Data Anda telah berhasil dikirim. Silakan lanjutkan ke proses Daftar Ulang.",
+                variant: "default",
+            });
+            form.reset(); // Reset form after successful submission
+            setTempatTanggalLahir(null); // Clear derived fields
+            setAlamatLengkap(null); // Clear derived fields
+            setCurrentStep(0); // Reset to first step
+            // TODO: Generate and display/download Nomor Pendaftaran here
+        } catch (error) {
+            console.error("Submission error:", error);
+            toast({
+                title: "Pendaftaran Gagal!",
+                description: "Terjadi kesalahan saat mengirim data. Silakan coba lagi.",
+                variant: "destructive",
+            });
+        }
+        // --- End of TODO ---
     }
-  }, [watchedTempatLahir, watchedTanggalLahir, mounted]);
-
-  // Effect for Alamat Lengkap - runs only on client after mount
-  useEffect(() => {
-    if (!mounted) return; // Don't run before mount
-    const rtRwString = (watchedRt && watchedRw) ? `RT ${watchedRt.padStart(3, '0')} / RW ${watchedRw.padStart(3, '0')}` : '';
-    const parts = [
-      watchedDukuhJalan,
-      watchedDesa,
-      rtRwString,
-      watchedKecamatan ? `Kec. ${watchedKecamatan}` : '',
-      watchedKabupaten ? `Kab. ${watchedKabupaten}` : '',
-      watchedProvinsi ? `Prov. ${watchedProvinsi}` : '',
-    ];
-    setAlamatLengkap(parts.filter(Boolean).join(', '));
-  }, [watchedDukuhJalan, watchedDesa, watchedRt, watchedRw, watchedKecamatan, watchedKabupaten, watchedProvinsi, mounted]);
-
-  // Handle form submission
-  async function onSubmit(values: FormSchemaType) {
-    // Convert tanggalLahir to YYYY-MM-DD for database
-    const dataToSubmit = {
-      ...values,
-      tanggalLahir: values.tanggalLahir ? format(values.tanggalLahir, 'yyyy-MM-dd') : null,
-      tempatTanggalLahir: tempatTanggalLahir, // Send derived value
-      alamatLengkap: alamatLengkap, // Send derived value
-      // Ensure optional fields are handled correctly
-      noHpAyah: values.noHpAyah || null,
-      noHpIbu: values.noHpIbu || null,
-      namaWali: values.tinggal === 'Bersama Wali' ? values.namaWali : null,
-      hubunganWali: values.tinggal === 'Bersama Wali' ? values.hubunganWali : null,
-      pendidikanWali: values.tinggal === 'Bersama Wali' ? values.pendidikanWali : null,
-      pekerjaanWali: values.tinggal === 'Bersama Wali' ? values.pekerjaanWali : null,
-      alamatWali: values.tinggal === 'Bersama Wali' ? values.alamatWali : null,
-      noHpWali: values.tinggal === 'Bersama Wali' ? values.noHpWali || null : null,
-      nisn: values.nisn || null,
-      punyaPiagam: values.punyaPiagam || null,
-    };
-
-    console.log('Form Submitted Data:', dataToSubmit);
-
-    // --- TODO: Replace with actual API call ---
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast({
-        title: "Pendaftaran Berhasil!",
-        description: "Data Anda telah berhasil dikirim. Silakan lanjutkan ke proses Daftar Ulang.",
-        variant: "default",
-      });
-      form.reset(); // Reset form after successful submission
-      setTempatTanggalLahir(''); // Clear derived fields
-      setAlamatLengkap(''); // Clear derived fields
-      setCurrentStep(0); // Reset to first step
-      // TODO: Generate and display/download Nomor Pendaftaran here
-    } catch (error) {
-      console.error("Submission error:", error);
-      toast({
-        title: "Pendaftaran Gagal!",
-        description: "Terjadi kesalahan saat mengirim data. Silakan coba lagi.",
-        variant: "destructive",
-      });
-    }
-    // --- End of TODO ---
-  }
 
     // Function to determine if a conditional step should be shown - depends on mounted state
     const shouldShowStep = (stepIndex: number): boolean => {
@@ -267,60 +266,74 @@ export default function FormPendaftaranPage() {
         return conditionFieldValue === step.conditionValue;
     };
 
-  const handleNext = async () => {
-    if (!mounted) return; // Prevent action before mount
-    const currentStepConfig = steps[currentStep];
-    const fieldsToValidate = currentStepConfig.fields as FieldPath<FormSchemaType>[];
+    // Recalculate active steps on mount and when dependencies change
+    const activeSteps = React.useMemo(() => {
+        if (!mounted) return steps.filter(s => !s.isConditional); // Default non-conditional steps before mount
+        return steps.filter((_, index) => shouldShowStep(index));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [mounted, watchedTinggal]); // Depend on mounted state and the condition field value
 
-    // Trigger validation for the current step's fields
-    const isValid = await form.trigger(fieldsToValidate);
+    const handleNext = async () => {
+        if (!mounted) return; // Prevent action before mount
+        const currentStepConfig = steps[currentStep];
+        const fieldsToValidate = currentStepConfig.fields as FieldPath<FormSchemaType>[];
 
-    if (isValid) {
-        let nextStepIndex = currentStep + 1;
-        // Skip conditional step if condition is not met
-        while (steps[nextStepIndex]?.isConditional && !shouldShowStep(nextStepIndex)) {
-            nextStepIndex++;
-        }
+        // Trigger validation for the current step's fields
+        const isValid = await form.trigger(fieldsToValidate);
 
-        if (nextStepIndex < steps.length) {
-             setCurrentStep(nextStepIndex);
-             window.scrollTo(0, 0); // Scroll to top on step change
+        if (isValid) {
+            let nextStepIndex = currentStep + 1;
+            // Skip conditional step if condition is not met
+            while (steps[nextStepIndex]?.isConditional && !shouldShowStep(nextStepIndex)) {
+                nextStepIndex++;
+            }
+
+            if (nextStepIndex < steps.length) {
+                setCurrentStep(nextStepIndex);
+                window.scrollTo(0, 0); // Scroll to top on step change
+            } else {
+                // Handle final submission if it's the last step
+                form.handleSubmit(onSubmit)();
+            }
         } else {
-             // Handle final submission if it's the last step
-             form.handleSubmit(onSubmit)();
+            toast({
+                title: "Form Tidak Valid",
+                description: "Mohon periksa kembali isian pada bagian ini.",
+                variant: "destructive",
+            });
         }
-    } else {
-        toast({
-            title: "Form Tidak Valid",
-            description: "Mohon periksa kembali isian pada bagian ini.",
-            variant: "destructive",
-        });
+    };
+
+    const handlePrevious = () => {
+        if (!mounted) return; // Prevent action before mount
+        let prevStepIndex = currentStep - 1;
+        // Skip conditional step if condition was not met
+        while (steps[prevStepIndex]?.isConditional && !shouldShowStep(prevStepIndex)) {
+            prevStepIndex--;
+        }
+        if (prevStepIndex >= 0) {
+            setCurrentStep(prevStepIndex);
+            window.scrollTo(0, 0); // Scroll to top on step change
+        }
+    };
+
+
+    // Calculate progress - depends on mounted state
+    const currentActiveStepIndex = activeSteps.findIndex(step => step.id === steps[currentStep].id);
+    const progress = mounted ? ((currentActiveStepIndex >= 0 ? currentActiveStepIndex + 1 : 1) / activeSteps.length) * 100 : 0;
+
+
+    const CurrentStepIcon = steps[currentStep]?.icon || Info; // Use default icon
+
+    if (!mounted) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                 <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+                 <span>Memuat formulir...</span>
+            </div>
+        );
     }
-  };
 
-  const handlePrevious = () => {
-    if (!mounted) return; // Prevent action before mount
-    let prevStepIndex = currentStep - 1;
-    // Skip conditional step if condition was not met
-     while (steps[prevStepIndex]?.isConditional && !shouldShowStep(prevStepIndex)) {
-        prevStepIndex--;
-     }
-    if (prevStepIndex >= 0) {
-        setCurrentStep(prevStepIndex);
-        window.scrollTo(0, 0); // Scroll to top on step change
-    }
-  };
-
-
-   // Calculate progress - depends on mounted state
-   const activeSteps = mounted ? steps.filter((_, index) => shouldShowStep(index)) : steps.filter(s => !s.isConditional); // Show non-conditional initially or filtered steps after mount
-   const currentActiveStepIndex = activeSteps.findIndex(step => step.id === steps[currentStep].id);
-   const progress = mounted ? ((currentActiveStepIndex >= 0 ? currentActiveStepIndex + 1 : 1) / activeSteps.length) * 100 : 0;
-
-
-  const CurrentStepIcon = mounted ? steps[currentStep]?.icon || Info : Loader2; // Use Loader while not mounted
-
-  // Loading state render removed to avoid hydration issues
 
   return (
     <div className="container mx-auto py-12 px-4">
@@ -342,7 +355,7 @@ export default function FormPendaftaranPage() {
            <div className="mt-6 px-4">
              <Progress value={progress} className="w-full h-2 bg-primary/30" />
              <p className="text-center text-xs mt-1 text-primary-foreground/80">
-                {mounted ? `Langkah ${currentActiveStepIndex >= 0 ? currentActiveStepIndex + 1 : 1} dari ${activeSteps.length}: ${steps[currentStep]?.title || 'Memuat...'}` : 'Memuat langkah...'}
+                Langkah {currentActiveStepIndex >= 0 ? currentActiveStepIndex + 1 : 1} dari {activeSteps.length}: {steps[currentStep]?.title || 'Memuat...'}
              </p>
            </div>
         </CardHeader>
@@ -353,13 +366,13 @@ export default function FormPendaftaranPage() {
 
               {/* Render sections based on currentStep */}
               {steps.map((step, index) => (
-                // Only render the section if it's the current step OR if it's conditional and should be shown (only check after mount)
-                (index === currentStep && (step.isConditional ? mounted && shouldShowStep(index) : true)) && (
+                // Only render the section if it's the current step
+                (index === currentStep) && (
                   <Card key={step.id} className="rounded-none border-none shadow-none">
                     <CardHeader className="bg-secondary/30 p-4 border-b sticky top-0 z-10 backdrop-blur-sm">
                       <CardTitle className="text-xl font-semibold text-primary flex items-center gap-2">
-                         {/* Use Loader2 icon if not mounted, otherwise use the step icon */}
-                         {mounted ? <step.icon className="w-6 h-6" /> : <Loader2 className="w-6 h-6 animate-spin" />}
+                         {/* Render icon consistently, rely on CSS for visibility if needed */}
+                         <CurrentStepIcon className="w-6 h-6" />
                          {step.title}
                       </CardTitle>
                     </CardHeader>
@@ -506,11 +519,10 @@ export default function FormPendaftaranPage() {
                                             !field.value && "text-muted-foreground"
                                           )}
                                         >
-                                          {/* Render placeholder initially, format date only after mount */}
-                                          {field.value && mounted ? (
-                                            format(field.value, "dd MMMM yyyy", { locale: localeId })
+                                           {field.value ? (
+                                              format(field.value, "dd MMMM yyyy", { locale: localeId })
                                           ) : (
-                                            <span>Pilih tanggal</span>
+                                              <span>Pilih tanggal</span>
                                           )}
                                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                         </Button>
@@ -538,8 +550,8 @@ export default function FormPendaftaranPage() {
                           <FormItem>
                             <FormLabel>Tempat, Tanggal Lahir (Otomatis)</FormLabel>
                             <FormControl>
-                              {/* Render placeholder initially, show derived value only after mount */}
-                              <Input value={mounted ? (tempatTanggalLahir ?? 'Memuat...') : 'Memuat...'} readOnly disabled className="bg-muted/50" />
+                              {/* Render derived value consistently */}
+                              <Input value={tempatTanggalLahir ?? ''} readOnly disabled className="bg-muted/50" />
                             </FormControl>
                           </FormItem>
                           <FormField
@@ -681,8 +693,8 @@ export default function FormPendaftaranPage() {
                           <FormItem>
                             <FormLabel>Alamat Lengkap (Otomatis)</FormLabel>
                             <FormControl>
-                              {/* Render placeholder initially, show derived value only after mount */}
-                              <Textarea value={mounted ? (alamatLengkap ?? 'Memuat...') : 'Memuat...'} readOnly disabled className="bg-muted/50" rows={2} />
+                              {/* Render derived value consistently */}
+                              <Textarea value={alamatLengkap ?? ''} readOnly disabled className="bg-muted/50" rows={2} />
                             </FormControl>
                           </FormItem>
                          </>
@@ -1087,29 +1099,34 @@ export default function FormPendaftaranPage() {
 
               {/* Navigation Buttons */}
               <div className="flex justify-between p-6 mt-0 bg-background border-t">
+                {/* Render previous button consistently */}
                 <Button type="button" variant="outline" onClick={handlePrevious} disabled={!mounted || currentStep === 0}>
                   <ArrowLeft className="mr-2 h-4 w-4" /> Kembali
                 </Button>
-                {mounted && currentStep < activeSteps.length - 1 ? (
-                  <Button type="button" onClick={handleNext} className="bg-primary hover:bg-primary/90">
-                    Selanjutnya <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                ) : mounted ? ( // Only show submit button if mounted and it's the last step
-                  <Button type="submit" size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 text-lg font-semibold shadow-md transform hover:scale-105 transition-transform duration-200" disabled={form.formState.isSubmitting}>
-                    <PenSquare className="mr-2 h-5 w-5" />
-                    {form.formState.isSubmitting ? (
-                        <>
-                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                            Mengirim Data...
-                        </>
-                    ) : 'Kirim Pendaftaran Saya'}
-                  </Button>
-                ) : ( // Placeholder while not mounted
-                    <Button type="button" disabled>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Memuat...
-                    </Button>
-                )}
+
+                {/* Render next/submit button based on mounted state and current step */}
+                 {mounted ? (
+                     currentStep < activeSteps.length - 1 ? (
+                         <Button type="button" onClick={handleNext} className="bg-primary hover:bg-primary/90">
+                             Selanjutnya <ArrowRight className="ml-2 h-4 w-4" />
+                         </Button>
+                     ) : (
+                         <Button type="submit" size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 text-lg font-semibold shadow-md transform hover:scale-105 transition-transform duration-200" disabled={form.formState.isSubmitting}>
+                             <PenSquare className="mr-2 h-5 w-5" />
+                             {form.formState.isSubmitting ? (
+                                 <>
+                                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                     Mengirim Data...
+                                 </>
+                             ) : 'Kirim Pendaftaran Saya'}
+                         </Button>
+                     )
+                 ) : ( // Show a disabled loading state for the button before mount
+                     <Button type="button" disabled>
+                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                         Memuat...
+                     </Button>
+                 )}
               </div>
             </form>
           </Form>
@@ -1118,3 +1135,10 @@ export default function FormPendaftaranPage() {
     </div>
   );
 }
+
+
+// The default export remains the Client component wrapper
+export default function FormPendaftaranPage() {
+    return <FormPendaftaranClient />;
+}
+
