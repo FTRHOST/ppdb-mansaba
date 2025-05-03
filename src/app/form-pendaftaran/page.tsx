@@ -35,7 +35,7 @@ import {
 import { Progress } from "@/components/ui/progress"; // Import Progress
 import { CalendarIcon, User, Home, Users, Building, PenSquare, GraduationCap, Info, MapPin, UserCheck, BookOpen, Lightbulb, FileText, HeartHandshake, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'; // Added Loader2
 import { format, parse } from 'date-fns';
-import { id } from 'date-fns/locale'; // Import Indonesian locale
+import { id as localeId } from 'date-fns/locale'; // Import Indonesian locale
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
@@ -111,8 +111,8 @@ const steps = [
 
 export default function FormPendaftaranPage() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isClient, setIsClient] = useState(false); // State to track client-side rendering
-  const [mounted, setMounted] = useState(false); // State to track component mount
+  // const [isClient, setIsClient] = useState(false); // State to track client-side rendering - No longer needed for main loading
+  const [mounted, setMounted] = useState(false); // State to track component mount for effects
 
   const form = useForm<FormSchemaType>({
     resolver: zodResolver(formSchema),
@@ -173,10 +173,10 @@ export default function FormPendaftaranPage() {
   const watchedProvinsi = form.watch('provinsi');
   const watchedTinggal = form.watch('tinggal');
 
-  // Effect to signal client-side rendering and mount completion
+  // Effect to signal mount completion
   useEffect(() => {
-    setIsClient(true);
-    setMounted(true); // Signal that the component has mounted
+    // setIsClient(true); // No longer needed for main loading
+    setMounted(true); // Signal that the component has mounted for effects
   }, []);
 
   // Effect for Tempat, Tanggal Lahir - runs only on client after mount
@@ -184,7 +184,7 @@ export default function FormPendaftaranPage() {
      if (!mounted) return; // Don't run before mount
     if (watchedTempatLahir && watchedTanggalLahir) {
       try {
-        const formattedDate = format(watchedTanggalLahir, 'dd MMMM yyyy', { locale: id });
+        const formattedDate = format(watchedTanggalLahir, 'dd MMMM yyyy', { locale: localeId });
         setTempatTanggalLahir(`${watchedTempatLahir}, ${formattedDate}`);
       } catch (error) {
         console.error("Error formatting date:", error);
@@ -318,10 +318,10 @@ export default function FormPendaftaranPage() {
    const currentActiveStepIndex = activeSteps.findIndex(step => step.id === steps[currentStep].id);
    const progress = mounted ? ((currentActiveStepIndex >= 0 ? currentActiveStepIndex + 1 : 1) / activeSteps.length) * 100 : 0;
 
-    // No conditional rendering of the entire component based on mounted state
-    // The component structure renders initially, and useEffect handles dynamic parts.
 
-  const CurrentStepIcon = steps[currentStep]?.icon || Info; // Fallback icon
+  const CurrentStepIcon = mounted ? steps[currentStep]?.icon || Info : Loader2; // Use Loader while not mounted
+
+  // Removed the conditional rendering block for `!mounted`
 
   return (
     <div className="container mx-auto py-12 px-4">
@@ -343,7 +343,7 @@ export default function FormPendaftaranPage() {
            <div className="mt-6 px-4">
              <Progress value={progress} className="w-full h-2 bg-primary/30" />
              <p className="text-center text-xs mt-1 text-primary-foreground/80">
-                {mounted ? `Langkah ${currentActiveStepIndex >= 0 ? currentActiveStepIndex + 1 : 1} dari ${activeSteps.length}: ${steps[currentStep]?.title || 'Memuat...'}` : 'Memuat...'}
+                {mounted ? `Langkah ${currentActiveStepIndex >= 0 ? currentActiveStepIndex + 1 : 1} dari ${activeSteps.length}: ${steps[currentStep]?.title || 'Memuat...'}` : 'Memuat langkah...'}
              </p>
            </div>
         </CardHeader>
@@ -354,12 +354,14 @@ export default function FormPendaftaranPage() {
 
               {/* Render sections based on currentStep */}
               {steps.map((step, index) => (
-                // Only render the section if it's the current step OR if it's conditional and should be shown
-                (index === currentStep && (step.isConditional ? shouldShowStep(index) : true)) && (
+                // Only render the section if it's the current step OR if it's conditional and should be shown (only check after mount)
+                (index === currentStep && (step.isConditional ? mounted && shouldShowStep(index) : true)) && (
                   <Card key={step.id} className="rounded-none border-none shadow-none">
                     <CardHeader className="bg-secondary/30 p-4 border-b sticky top-0 z-10 backdrop-blur-sm">
                       <CardTitle className="text-xl font-semibold text-primary flex items-center gap-2">
-                        <step.icon className="w-6 h-6" /> {step.title}
+                         {/* Use Loader2 icon if not mounted, otherwise use the step icon */}
+                         {mounted ? <step.icon className="w-6 h-6" /> : <Loader2 className="w-6 h-6 animate-spin" />}
+                         {step.title}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="p-6 space-y-6">
@@ -505,8 +507,8 @@ export default function FormPendaftaranPage() {
                                             !field.value && "text-muted-foreground"
                                           )}
                                         >
-                                          {field.value ? (
-                                            format(field.value, "dd MMMM yyyy", { locale: id })
+                                          {field.value && mounted ? ( // Check mounted state here
+                                            format(field.value, "dd MMMM yyyy", { locale: localeId })
                                           ) : (
                                             <span>Pilih tanggal</span>
                                           )}
@@ -519,7 +521,7 @@ export default function FormPendaftaranPage() {
                                         mode="single"
                                         selected={field.value}
                                         onSelect={field.onChange}
-                                        locale={id}
+                                        locale={localeId}
                                         disabled={(date) => date > new Date() || date < new Date("1990-01-01")}
                                         captionLayout="dropdown-buttons" // Use dropdowns for month/year
                                         fromYear={1990} // Start year for dropdown
@@ -536,7 +538,7 @@ export default function FormPendaftaranPage() {
                           <FormItem>
                             <FormLabel>Tempat, Tanggal Lahir (Otomatis)</FormLabel>
                             <FormControl>
-                              <Input value={tempatTanggalLahir} readOnly disabled className="bg-muted/50" />
+                              <Input value={mounted ? tempatTanggalLahir : 'Memuat...'} readOnly disabled className="bg-muted/50" />
                             </FormControl>
                           </FormItem>
                           <FormField
@@ -678,7 +680,7 @@ export default function FormPendaftaranPage() {
                           <FormItem>
                             <FormLabel>Alamat Lengkap (Otomatis)</FormLabel>
                             <FormControl>
-                              <Textarea value={alamatLengkap} readOnly disabled className="bg-muted/50" rows={2} />
+                              <Textarea value={mounted ? alamatLengkap : 'Memuat...'} readOnly disabled className="bg-muted/50" rows={2} />
                             </FormControl>
                           </FormItem>
                          </>
@@ -1083,18 +1085,28 @@ export default function FormPendaftaranPage() {
 
               {/* Navigation Buttons */}
               <div className="flex justify-between p-6 mt-0 bg-background border-t">
-                <Button type="button" variant="outline" onClick={handlePrevious} disabled={currentStep === 0}>
+                <Button type="button" variant="outline" onClick={handlePrevious} disabled={!mounted || currentStep === 0}>
                   <ArrowLeft className="mr-2 h-4 w-4" /> Kembali
                 </Button>
-                {currentStep < activeSteps.length - 1 ? (
+                {mounted && currentStep < activeSteps.length - 1 ? (
                   <Button type="button" onClick={handleNext} className="bg-primary hover:bg-primary/90">
                     Selanjutnya <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                ) : (
+                ) : mounted ? ( // Only show submit button if mounted and it's the last step
                   <Button type="submit" size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 text-lg font-semibold shadow-md transform hover:scale-105 transition-transform duration-200" disabled={form.formState.isSubmitting}>
                     <PenSquare className="mr-2 h-5 w-5" />
-                    {form.formState.isSubmitting ? 'Mengirim Data...' : 'Kirim Pendaftaran Saya'}
+                    {form.formState.isSubmitting ? (
+                        <>
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            Mengirim Data...
+                        </>
+                    ) : 'Kirim Pendaftaran Saya'}
                   </Button>
+                ) : ( // Placeholder while not mounted
+                    <Button type="button" disabled>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Memuat...
+                    </Button>
                 )}
               </div>
             </form>
