@@ -26,7 +26,6 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar'; // Import Calendar
 import {
   Popover,
   PopoverContent,
@@ -34,30 +33,14 @@ import {
 } from '@/components/ui/popover'; // Import Popover
 import { Progress } from "@/components/ui/progress";
 import { CalendarIcon, User, Home, Users, Building, PenSquare, GraduationCap, Info, MapPin, UserCheck, BookOpen, Lightbulb, FileText, HeartHandshake, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
-import { format, parse } from 'date-fns';
+import { format, parse, isValid as isValidDate } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
-
-// Helper function to validate dd/MM/yyyy format
-const isValidDateString = (dateString: string): boolean => {
-  const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
-  if (!regex.test(dateString)) return false;
-  try {
-    // Attempt to parse to ensure it's a valid date logically (e.g., not 31/02/2023)
-    const parsedDate = parse(dateString, 'dd/MM/yyyy', new Date());
-    // Check if the parsed date matches the input string components
-    return !isNaN(parsedDate.getTime()) &&
-           parsedDate.getDate() === parseInt(dateString.substring(0, 2), 10) &&
-           (parsedDate.getMonth() + 1) === parseInt(dateString.substring(3, 5), 10) &&
-           parsedDate.getFullYear() === parseInt(dateString.substring(6, 10), 10);
-  } catch (error) {
-    return false;
-  }
-};
-
+import DatePicker from 'react-datepicker'; // Import react-datepicker
+import "react-datepicker/dist/react-datepicker.css"; // Import default styles
+import '@/app/datepicker-custom.css'; // Import custom styles
 
 // Define Zod schema for validation
 const formSchema = z.object({
@@ -67,7 +50,8 @@ const formSchema = z.object({
   nama: z.string().min(1, { message: 'Nama lengkap harus diisi.' }),
   jenisKelamin: z.enum(['Laki-laki', 'Perempuan'], { required_error: 'Jenis kelamin harus dipilih.' }),
   tempatLahir: z.string().min(1, { message: 'Tempat lahir harus diisi.' }),
-  tanggalLahir: z.date({ required_error: 'Tanggal lahir harus dipilih.' }), // Use date object
+  // Use date object for internal state, but keep the string for display/input if needed
+  tanggalLahir: z.date({ required_error: 'Tanggal lahir harus dipilih.' }),
   noHp: z.string().min(10, { message: 'Nomor HP/Whatsapp minimal 10 digit.' }).regex(/^\d+$/, { message: 'Nomor HP/Whatsapp hanya boleh berisi angka.' }),
   tinggal: z.enum(['Bersama Orang tua', 'Bersama Wali', 'Bersama Kakak', 'Tinggal Sendiri', 'Lainnya'], { required_error: 'Pilihan tinggal harus dipilih.' }),
   dukuhJalan: z.string().min(1, { message: 'Dukuh/Jalan harus diisi.' }),
@@ -132,6 +116,9 @@ const FormPendaftaranClient = () => {
     const [mounted, setMounted] = useState(false);
     const [tempatTanggalLahir, setTempatTanggalLahir] = useState<string | null>(null);
     const [alamatLengkap, setAlamatLengkap] = useState<string | null>(null);
+    // State for date picker visibility
+    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+
 
     const form = useForm<FormSchemaType>({
         resolver: zodResolver(formSchema),
@@ -197,7 +184,7 @@ const FormPendaftaranClient = () => {
     // Effect for Tempat, Tanggal Lahir - runs only on client after mount
     useEffect(() => {
         if (!mounted) return; // Don't run before mount
-        if (watchedTempatLahir && watchedTanggalLahir instanceof Date) { // Check if it's a Date object
+        if (watchedTempatLahir && watchedTanggalLahir instanceof Date && isValidDate(watchedTanggalLahir)) { // Check if it's a valid Date object
             try {
                 const formattedDate = format(watchedTanggalLahir, 'dd MMMM yyyy', { locale: localeId });
                 setTempatTanggalLahir(`${watchedTempatLahir}, ${formattedDate}`);
@@ -229,7 +216,7 @@ const FormPendaftaranClient = () => {
     // Handle form submission
     async function onSubmit(values: FormSchemaType) {
          let tanggalLahirDbFormat: string | null = null;
-         if (values.tanggalLahir instanceof Date) { // Check if it's a Date object
+         if (values.tanggalLahir instanceof Date && isValidDate(values.tanggalLahir)) { // Check if it's a valid Date object
              try {
                  tanggalLahirDbFormat = format(values.tanggalLahir, 'yyyy-MM-dd');
              } catch (error) {
@@ -350,16 +337,6 @@ const FormPendaftaranClient = () => {
 
 
     const CurrentStepIcon = steps[currentStep]?.icon || Info; // Use default icon
-
-     // Render loading state until mounted
-      if (!mounted) {
-          return (
-              <div className="flex items-center justify-center min-h-screen">
-                   <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-                   <span>Memuat formulir...</span>
-              </div>
-          );
-      }
 
 
   return (
@@ -530,50 +507,46 @@ const FormPendaftaranClient = () => {
                                 </FormItem>
                               )}
                             />
-                             <FormField
+                            <FormField
                                 control={form.control}
                                 name="tanggalLahir"
                                 render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                    <FormLabel>Tanggal Lahir</FormLabel>
-                                    <Popover>
-                                    <PopoverTrigger asChild>
-                                        <FormControl>
-                                        <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                            "pl-3 text-left font-normal",
-                                            !field.value && "text-muted-foreground"
-                                            )}
-                                        >
-                                            {field.value ? (
-                                            format(field.value, "dd MMMM yyyy", { locale: localeId })
-                                            ) : (
-                                            <span>Pilih tanggal</span>
-                                            )}
-                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                        </Button>
-                                        </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar
-                                        mode="single"
-                                        selected={field.value}
-                                        onSelect={field.onChange}
-                                        disabled={(date) =>
-                                            date > new Date() || date < new Date("1980-01-01")
-                                        }
-                                        initialFocus
-                                        captionLayout="dropdown-buttons" // Use dropdowns for years/months
-                                        fromYear={1990} // Set start year for dropdown
-                                        toYear={new Date().getFullYear() - 10} // Set end year (e.g., 10 years ago)
+                                    <FormItem className="flex flex-col">
+                                        <FormLabel>Tanggal Lahir</FormLabel>
+                                        <DatePicker
+                                            selected={field.value}
+                                            onChange={(date: Date | null) => field.onChange(date)}
+                                            dateFormat="dd/MM/yyyy"
+                                            placeholderText="DD/MM/YYYY"
+                                            showYearDropdown
+                                            showMonthDropdown
+                                            dropdownMode="select"
+                                            yearDropdownItemNumber={70} // Show 70 years in dropdown
+                                            scrollableYearDropdown
+                                            maxDate={new Date()} // Disable future dates
+                                            minDate={new Date(1980, 0, 1)} // Example min date
+                                            customInput={
+                                                <Button
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                        "w-full justify-start text-left font-normal",
+                                                        !field.value && "text-muted-foreground"
+                                                    )}
+                                                    onClick={() => setIsDatePickerOpen(!isDatePickerOpen)} // Toggle picker on button click
+                                                    type="button" // Prevent form submission
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                                                    {field.value ? format(field.value, "dd MMMM yyyy", { locale: localeId }) : <span>Pilih tanggal</span>}
+                                                </Button>
+                                            }
+                                            open={isDatePickerOpen}
+                                            onClickOutside={() => setIsDatePickerOpen(false)}
+                                            onSelect={() => setIsDatePickerOpen(false)} // Close on selecting date
                                         />
-                                    </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                </FormItem>
+                                        <FormMessage />
+                                    </FormItem>
                                 )}
-                            />
+                             />
                           </div>
                           <FormItem>
                             <FormLabel>Tempat, Tanggal Lahir (Otomatis)</FormLabel>
