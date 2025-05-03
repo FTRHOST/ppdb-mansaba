@@ -1,7 +1,6 @@
-
 'use client';
 
-import React from 'react'; // Added missing React import
+import React, { useState, useEffect, useMemo } from 'react'; // Added missing React import and hooks
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { z } from 'zod';
@@ -37,7 +36,6 @@ import { CalendarIcon, User, Home, Users, Building, PenSquare, GraduationCap, In
 import { format, parse } from 'date-fns';
 import { id as localeId } from 'date-fns/locale'; // Import Indonesian locale
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -267,7 +265,7 @@ const FormPendaftaranClient = () => {
     };
 
     // Recalculate active steps on mount and when dependencies change
-    const activeSteps = React.useMemo(() => {
+    const activeSteps = useMemo(() => {
         if (!mounted) return steps.filter(s => !s.isConditional); // Default non-conditional steps before mount
         return steps.filter((_, index) => shouldShowStep(index));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -325,14 +323,12 @@ const FormPendaftaranClient = () => {
 
     const CurrentStepIcon = steps[currentStep]?.icon || Info; // Use default icon
 
-    if (!mounted) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                 <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-                 <span>Memuat formulir...</span>
-            </div>
-        );
-    }
+     // Conditional rendering: Show loading state or nothing on the server/initial client render
+     if (!mounted) {
+         // Return null or a minimal placeholder that matches the server render
+         // Avoid rendering the loading div directly here to prevent mismatch
+         return null;
+     }
 
 
   return (
@@ -1100,7 +1096,7 @@ const FormPendaftaranClient = () => {
               {/* Navigation Buttons */}
               <div className="flex justify-between p-6 mt-0 bg-background border-t">
                 {/* Render previous button consistently */}
-                <Button type="button" variant="outline" onClick={handlePrevious} disabled={!mounted || currentStep === 0}>
+                <Button type="button" variant="outline" onClick={handlePrevious} disabled={currentStep === 0}>
                   <ArrowLeft className="mr-2 h-4 w-4" /> Kembali
                 </Button>
 
