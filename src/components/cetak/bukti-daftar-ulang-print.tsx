@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image'; // Placeholder, assuming logo might be used later
+import Image from 'next/image'; // Use next/image
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import { CheckSquare, Square } from 'lucide-react'; // Icons for checklist
@@ -75,24 +75,18 @@ const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean; namaPet
           "receipt-container bg-white p-2 max-w-full print:max-w-none print:p-[4mm] mx-auto text-xs font-sans break-inside-avoid print:text-[9pt] print:leading-normal flex flex-col h-full", // Removed border from here
           isArsip ? "border-t-4 border-t-red-600" : ""
       )}>
-        {/* Header - Match image layout and styling */}
-        <div className="text-center mb-1 border-b-2 border-black pb-1 print:mb-1 print:pb-1">
-           <div className="flex justify-center items-center mb-0 print:mb-0"> {/* Reduced margin */}
-                {/* Logo */}
-                <div className="w-10 h-10 bg-transparent flex items-center justify-center mr-2 flex-shrink-0 print:w-10 print:h-10 print:mr-2" data-ai-hint="school logo green">
-                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 text-green-700 print:w-10 print:h-10"> {/* Matched size */}
-                        <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.522c0 .318.218.594.5.707A9.735 9.735 0 0 0 6 21a9.707 9.707 0 0 0 5.25-1.533v-1.42a.75.75 0 0 0-.657-.744A8.202 8.202 0 0 1 6 18a8.235 8.235 0 0 1-2.25-.37v-1.42a.75.75 0 0 1 .657-.744A8.21 8.21 0 0 0 6 15c2.086 0 3.981-.782 5.378-2.067a.75.75 0 0 0 1.122-.56v-1.42a.75.75 0 0 0-.5-.707 8.21 8.21 0 0 0-1.721-.486.75.75 0 0 0-.657.744v1.42h-.001c-1.431.925-3.312 1.483-5.323 1.483a8.235 8.235 0 0 1-2.25-.37V7.5a8.21 8.21 0 0 0 1.721-.486.75.75 0 0 1 .657.744v1.42c0 .274.11.523.294.706A8.21 8.21 0 0 0 6 10.5c2.086 0 3.981-.782 5.378-2.067a.75.75 0 0 1 1.122-.56v-1.42a.75.75 0 0 1 .5-.707c.157-.054.316-.1.477-.143a.75.75 0 0 0 .6-.89Z" />
-                        <path d="M12.75 3a9.735 9.735 0 0 1 3.25.555.75.75 0 0 1 .5.707v14.522c0 .318-.218.594-.5.707A9.735 9.735 0 0 1 12.75 21a9.707 9.707 0 0 1-5.25-1.533v-1.42a.75.75 0 0 1 .657-.744 8.202 8.202 0 0 0 4.593-.345 8.235 8.235 0 0 0 2.25-.37v-1.42a.75.75 0 0 0-.657-.744 8.21 8.21 0 0 1-4.593-.345c-2.086 0-3.981.782-5.378 2.067a.75.75 0 0 1-1.122.56v1.42a.75.75 0 0 1 .5.707 8.21 8.21 0 0 1 1.721.486.75.75 0 0 1 .657.744v-1.42h.001c1.431-.925 3.312-1.483 5.323-1.483a8.235 8.235 0 0 0 2.25.37V13.5a8.21 8.21 0 0 1-1.721.486.75.75 0 0 0-.657.744v-1.42a.75.75 0 0 1-.294-.706 8.21 8.21 0 0 1-1.622-4.533c2.086 0 3.981.782 5.378 2.067a.75.75 0 0 0 1.122.56v1.42a.75.75 0 0 0 .5-.707c.157.054.316.1.477-.143a.75.75 0 0 1 .6.89Z" />
-                    </svg>
-                </div>
-                {/* Text Alignment & Styling */}
-                <div className="flex-grow print:text-[9pt] print:leading-tight text-left"> {/* Left align text block */}
-                    <p className="text-xs font-bold print:text-[9pt] mb-0">PANITIA APENDAFTARAN PESERTA DIDIK BARU</p> {/* Adjusted text */}
-                    <p className="text-sm font-bold text-green-700 print:text-[10pt] mb-0">MA NU 01 BANYUPUTIH</p> {/* Larger school name */}
-                    <p className="text-xs font-bold print:text-[9pt] mb-0">TAHUN PELAJARAN 2025 / 2026</p> {/* Added slash */}
-                    {/* Divider */}
-                    <div className="h-[2px] bg-red-600 my-0.5 print:h-[1.5pt] print:my-0.5"></div>
-                </div>
+        {/* Header - Replace SVG with Image */}
+        <div className="mb-1 border-b-2 border-black pb-1 print:mb-1 print:pb-1">
+           <div className="w-full">
+             <Image
+               src="/logo-kop.jpg" // Path to your JPG letterhead image
+               alt="Kop Surat MA NU 01 Banyuputih"
+               width={700} // Adjust width as needed
+               height={100} // Adjust height as needed
+               className="w-full h-auto object-contain" // Ensure it scales correctly
+               priority // Load the logo eagerly
+               data-ai-hint="school letterhead"
+             />
            </div>
         </div>
         {/* Title - Adjusted margin, added red line */}
@@ -114,7 +108,7 @@ const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean; namaPet
             </div>
 
             {/* Detail Daftar Ulang - Checklist with tight spacing */}
-            <div className="mb-2 print:mb-2">
+            <div className="mb-1 print:mb-1"> {/* Reduced bottom margin */}
                  <p className="mb-0.5 text-xs font-medium print:text-[9pt] print:mb-0.5">Kelengkapan:</p> {/* Label for checklist */}
                 <div className="ml-2 grid grid-cols-1 gap-y-0 print:ml-2 print:gap-y-0"> {/* Tighter grid */}
                      <ChecklistItem checked={data.kelengkapanKK} label="KK/Akte (asli)" />
@@ -132,30 +126,32 @@ const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean; namaPet
                       )}
                 </div>
              </div>
-              {/* Info Box - Positioned directly below the checklist */}
-              <div className={cn(
-                  "border border-black p-1 text-center mt-2 mb-1 text-[8pt] leading-tight print:text-[7pt] print:my-1 print:p-1 small-print bg-gray-100 print:bg-gray-100" // Added mt-2
-               )}>
+             {/* Info Box - Moved below checklist */}
+             <div className={cn(
+                 "border border-black p-1 text-center text-[8pt] leading-tight print:text-[7pt] print:my-1 print:p-1 small-print bg-gray-100 print:bg-gray-100", // Removed explicit margin-top
+                  !isArsip ? 'mt-2' : '' // Add margin top only if not Arsip copy
+              )}>
                   {!isArsip ? (
                       <>
                           Selamat bergabung di Madrasah Hebat, MA NU 01 Banyuputih.<br/>
                           Info keberangkatan pertama akan di informasikan di grup Whatsapp Siswa Baru 2025
                       </>
                   ) : (
-                      <>&nbsp;</> // Add non-breaking space to maintain height if border collapses
+                     // Keep the box for layout consistency, maybe add a placeholder or just height
+                      <div className="h-8 print:h-8"></div> // Or adjust height as needed
                   )}
               </div>
           </div>
 
         {/* Footer - Pushes to bottom */}
-        <div className="receipt-footer mt-auto"> {/* Use mt-auto to push */}
-
+        <div className="receipt-footer mt-auto pt-2"> {/* Use mt-auto and added padding-top */}
             {/* Signature - Positioned at the bottom right */}
-            <div className="receipt-signature flex justify-end mt-1 print:mt-1"> {/* Reduced top margin */}
+            <div className="receipt-signature flex justify-end">
                 <div className="text-center text-xs print:text-[9pt]">
                     <p>{tempatDaftar}, {formattedTanggal}</p>
                     <p>Panitia PPDB</p>
-                    <div className="h-8 print:h-8 signature-space"></div> {/* Increased height for signature */}
+                    {/* Adjusted height for signature space */}
+                    <div className="h-10 print:h-10 signature-space"></div>
                     <p className="font-bold underline print:font-bold">( {petugasNamaDisplay} )</p>
                 </div>
             </div>
@@ -184,3 +180,5 @@ export const BuktiDaftarUlangPrint: React.FC<{ data: BuktiDaftarUlangData }> = (
        </div>
     );
   };
+
+    
