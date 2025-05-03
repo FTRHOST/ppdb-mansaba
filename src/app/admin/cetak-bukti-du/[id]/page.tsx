@@ -5,7 +5,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { BuktiDaftarUlangPrint, type BuktiDaftarUlangData } from '@/components/cetak/bukti-daftar-ulang-print'; // Import the specific print component
 import { Button } from '@/components/ui/button';
-import { Printer, ArrowLeft } from 'lucide-react';
+import { Printer, ArrowLeft, Loader2 } from 'lucide-react'; // Added Loader2
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast'; // Import toast
@@ -353,7 +353,7 @@ const CetakBuktiDUPageContent = () => {
 
 
     if (loading) {
-      return <div className="flex justify-center items-center h-screen"><p>Memuat data bukti daftar ulang...</p></div>;
+      return <div className="flex justify-center items-center h-screen"><Loader2 className="mr-2 h-8 w-8 animate-spin" /><span>Memuat data bukti daftar ulang...</span></div>;
     }
 
     if (error) {
@@ -387,18 +387,26 @@ const CetakBuktiDUPageContent = () => {
 
 // Main component that uses the Auth hook
 const CetakBuktiDUPage = () => {
-   const { user, loading: authLoading, requireAuth } = useAuth();
+   const { user, loading: authLoading } = useAuth();
 
-    useEffect(() => {
-        requireAuth(); // Ensure user is authenticated
-    }, [requireAuth]);
-
-    if (authLoading || !user) {
-        // Show loading indicator or redirect logic handled by requireAuth
-        return <div className="flex justify-center items-center h-screen"><p>Memeriksa autentikasi...</p></div>;
+   // No need for requireAuth here as it's handled by AdminLayout
+   // If auth is still loading, show a loading indicator
+    if (authLoading) {
+        return (
+          <div className="flex justify-center items-center h-screen">
+             <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+             <span>Memeriksa autentikasi...</span>
+          </div>
+        );
     }
 
-   // If authenticated, render the page content
+   // If loading is complete but user is not found (which shouldn't happen if layout requires auth), show message.
+   // The AdminLayout should ideally redirect before reaching this point.
+    if (!user) {
+        return <div className="flex justify-center items-center h-screen"><p>Anda harus login untuk mengakses halaman ini.</p></div>;
+    }
+
+   // If authenticated and loading is done, render the page content
    return <CetakBuktiDUPageContent />;
 };
 
