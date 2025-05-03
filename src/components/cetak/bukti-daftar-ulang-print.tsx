@@ -129,28 +129,22 @@ const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean; namaPet
                       )}
                 </div>
             </div>
+
+             {/* Info Box - Moved up */}
+             <div className={cn("border border-black p-1 text-center my-1 text-[8pt] leading-tight print:text-[8.5pt] print:mt-[2mm] print:mb-[2mm] print:p-[1.5mm] small-print bg-gray-100 print:bg-gray-100", isArsip ? "invisible print:invisible" : "")}>
+                 Selamat bergabung di Madrasah Hebat, MA NU 01 Banyuputih.<br/>
+                 Info keberangkatan pertama akan di informasikan di grup Whatsapp Siswa Baru 2025
+            </div>
          </div>
 
         {/* Footer - Pushes to bottom */}
         <div className="receipt-footer mt-auto"> {/* Use mt-auto to push */}
-             {/* Info Box - match image style */}
-             <div className={cn("border border-black p-1 text-center my-1 text-[8pt] leading-tight print:text-[8.5pt] print:mt-[2mm] print:mb-[2mm] print:p-[1.5mm] small-print bg-gray-100 print:bg-gray-100")}>
-                {!isArsip ? (
-                    <>
-                        Selamat bergabung di Madrasah Hebat, MA NU 01 Banyuputih.<br/>
-                        Info keberangkatan pertama akan di informasikan di grup Whatsapp Siswa Baru 2025
-                    </>
-                ) : (
-                    <>&nbsp;</> // Maintain height for arsip
-                )}
-            </div>
-
             {/* Signature - Positioned at the bottom right */}
             <div className="receipt-signature flex justify-end mt-1 print:mt-[2mm]"> {/* Reduced top margin */}
                 <div className="text-center text-xs print:text-[10pt]">
                     <p>{tempatDaftar}, {formattedTanggal}</p>
                     <p>Panitia PPDB</p>
-                    <div className="h-6 print:h-[10mm] signature-space"></div> {/* Adjusted height for signature */}
+                    <div className="h-8 print:h-[15mm] signature-space"></div> {/* Increased height for signature */}
                     <p className="font-bold underline print:font-semibold">( {petugasNamaDisplay} )</p> {/* Use semibold for print */}
                 </div>
             </div>
@@ -179,3 +173,4 @@ export const BuktiDaftarUlangPrint: React.FC<{ data: BuktiDaftarUlangData }> = (
        </div>
     );
   };
+
