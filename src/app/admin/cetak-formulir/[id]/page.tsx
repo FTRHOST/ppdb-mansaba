@@ -1,21 +1,20 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation'; // Added useRouter
-import { FormulirPendaftaranPrint, type FormulirData } from '@/components/cetak/formulir-pendaftaran-print'; // Use the specific print component
+import { useParams, useRouter } from 'next/navigation';
+import { FormulirPendaftaranPrint, type FormulirData } from '@/components/cetak/formulir-pendaftaran-print';
 import { Button } from '@/components/ui/button';
-import { Printer, ArrowLeft, Loader2 } from 'lucide-react'; // Added ArrowLeft and Loader2
+import { Printer, ArrowLeft, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
-import { useAuth } from '@/hooks/use-auth'; // Import useAuth
-import { toast } from '@/hooks/use-toast'; // Import toast
+import { useAuth } from '@/hooks/use-auth';
+import { toast } from '@/hooks/use-toast';
 
-// Mock data structure - Ensure this matches the data needed by FormulirPendaftaranPrint
+// Mock data structure
 interface PendaftarLengkap extends FormulirData {
   id: number;
 }
 
-// Mock data - replace with actual data fetching logic based on ID
 const mockFullData: PendaftarLengkap[] = [
    {
      id: 1,
@@ -45,7 +44,7 @@ const mockFullData: PendaftarLengkap[] = [
      pekerjaanIbu: 'Ibu Rumah Tangga',
      noHpIbu: '082222222222',
      alamatOrangtua: 'Sama dengan siswa',
-     namaWali: '', // Empty if not applicable
+     namaWali: '',
      hubunganWali: '',
      pendidikanWali: undefined,
      pekerjaanWali: '',
@@ -56,7 +55,7 @@ const mockFullData: PendaftarLengkap[] = [
      rekomendasiPendaftaran: 'Guru MTs',
      punyaPiagam: 'Tidak Punya',
      motivasi: 'Ingin mendalami ilmu agama dan umum.',
-     tanggalDaftar: new Date() // Add registration date
+     tanggalDaftar: new Date()
    },
    {
      id: 2,
@@ -104,14 +103,14 @@ const mockFullData: PendaftarLengkap[] = [
      nomorPendaftaran: 'A-2526/0004',
      nisn: '0098887776',
      nama: 'Dewi Anggraini',
-     tempatTanggalLahir: 'Batang, 19 Mei 2010', // Example TTL from image
+     tempatTanggalLahir: 'Batang, 19 Mei 2010',
      jenisKelamin: 'Perempuan',
      alamatLengkap: 'Kebumen Rt. 010/003 Kec. Tersono Kab. Batang',
      desa: 'Kebumen',
      kecamatan: 'Tersono',
      kabupaten: 'Batang',
      provinsi: 'Jawa Tengah',
-     dukuhJalan: 'Karangjati', // Added Dukuh from image data
+     dukuhJalan: 'Karangjati',
      rt: '10',
      rw: '03',
      noHp: '081567987147',
@@ -119,15 +118,15 @@ const mockFullData: PendaftarLengkap[] = [
      jalurPendaftaran: 'Reguler Sosial',
      programPeminatan: 'IPS',
      namaAyah: 'Muji Teguh',
-     pendidikanAyah: 'SD', // Simplified from SD/MI Sederajat
+     pendidikanAyah: 'SD',
      pekerjaanAyah: 'PETANI',
-     noHpAyah: '081567987147', // Used main HP as example
+     noHpAyah: '081567987147',
      namaIbu: 'Ngatirah',
-     pendidikanIbu: 'SD', // Simplified from SD/MI Sederajat
-     pekerjaanIbu: 'IRT', // Ibu Rumah Tangga
-     noHpIbu: '081567987147', // Used main HP as example
+     pendidikanIbu: 'SD',
+     pekerjaanIbu: 'IRT',
+     noHpIbu: '081567987147',
      alamatOrangtua: 'KARANGJATI, KEBUMEN, TERSONO, BATANG',
-     namaWali: 'MUJI TEGUH', // Data Wali from image, relationship 'AYAH'
+     namaWali: 'MUJI TEGUH',
      hubunganWali: 'AYAH',
      pendidikanWali: 'SD',
      pekerjaanWali: 'PETANI',
@@ -135,71 +134,82 @@ const mockFullData: PendaftarLengkap[] = [
      noHpWali: '081567987147',
      namaSekolahAsal: 'MTS NURUSSALAM TERSONO',
      alamatSekolahAsal: 'TERSONO',
-     rekomendasiPendaftaran: 'Ahmad Mashfufi', // Example Rekom
+     rekomendasiPendaftaran: 'Ahmad Mashfufi',
      punyaPiagam: 'Punya',
      motivasi: 'TOLABUL ILMI',
-     tanggalDaftar: new Date('2025-04-26') // Date from image
+     tanggalDaftar: new Date('2025-04-26')
    },
  ];
 
 // Component to render the actual page content once auth is confirmed
 const CetakFormulirPageContent = () => {
     const params = useParams();
-    const router = useRouter(); // Initialize router
+    const router = useRouter();
     const pendaftarId = params?.id ? parseInt(params.id as string, 10) : null;
     const [data, setData] = useState<PendaftarLengkap | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const printRef = useRef<HTMLDivElement>(null);
+    const [isClient, setIsClient] = useState(false); // State to track client-side mounting
+    const [letterheadUri, setLetterheadUri] = useState<string | null>(null); // State for letterhead
 
     useEffect(() => {
-      const fetchData = async () => {
-        if (!pendaftarId) {
-          setError('ID Pendaftar tidak valid.');
-          setLoading(false);
-          return;
+        setIsClient(true); // Mark as client-side
+        // Load letterhead from localStorage on client-side mount
+        const storedUri = localStorage.getItem('customLetterheadUri');
+        if (storedUri) {
+            setLetterheadUri(storedUri);
         }
+    }, []);
 
-        setLoading(true);
-        setError(null);
-        try {
-          // TODO: Replace with actual API call to fetch data by ID
-          console.log(`Fetching data for ID: ${pendaftarId}`);
-          await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-          const foundData = mockFullData.find(item => item.id === pendaftarId);
+    useEffect(() => {
+        if (!isClient) return; // Don't fetch until client-side
 
-          if (foundData) {
-            // Add current date as tanggalCetak
-            const dataWithPrintDate: FormulirData = {
-                ...foundData,
-                tanggalCetak: format(new Date(), 'dd MMMM yyyy', { locale: localeId })
-            };
-            setData(dataWithPrintDate as PendaftarLengkap);
-          } else {
-            setError(`Data pendaftar dengan ID ${pendaftarId} tidak ditemukan.`);
-          }
-        } catch (err) {
-          console.error('Error fetching pendaftar data:', err);
-          setError('Gagal memuat data pendaftar.');
-          toast({
-             title: "Gagal Memuat Data",
-             description: "Terjadi kesalahan saat mengambil data pendaftar.",
-             variant: "destructive",
-          });
-        } finally {
-          setLoading(false);
-        }
-      };
+        const fetchData = async () => {
+            if (!pendaftarId) {
+                setError('ID Pendaftar tidak valid.');
+                setLoading(false);
+                return;
+            }
 
-      fetchData();
-    }, [pendaftarId]);
+            setLoading(true);
+            setError(null);
+            try {
+                console.log(`Fetching data for ID: ${pendaftarId}`);
+                await new Promise(resolve => setTimeout(resolve, 500));
+                const foundData = mockFullData.find(item => item.id === pendaftarId);
+
+                if (foundData) {
+                    const dataWithPrintDate: FormulirData = {
+                        ...foundData,
+                        tanggalCetak: format(new Date(), 'dd MMMM yyyy', { locale: localeId })
+                    };
+                    setData(dataWithPrintDate as PendaftarLengkap);
+                } else {
+                    setError(`Data pendaftar dengan ID ${pendaftarId} tidak ditemukan.`);
+                }
+            } catch (err) {
+                console.error('Error fetching pendaftar data:', err);
+                setError('Gagal memuat data pendaftar.');
+                toast({
+                    title: "Gagal Memuat Data",
+                    description: "Terjadi kesalahan saat mengambil data pendaftar.",
+                    variant: "destructive",
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [pendaftarId, isClient]); // Depend on isClient
 
    const handlePrint = () => {
      const printContent = printRef.current;
-     if (!printContent) {
+     if (!printContent || !isClient) { // Ensure client side
           toast({
              title: "Gagal Mencetak",
-             description: "Konten formulir tidak ditemukan.",
+             description: "Konten formulir tidak ditemukan atau komponen belum siap.",
              variant: "destructive",
           });
          return;
@@ -232,19 +242,20 @@ const CetakFormulirPageContent = () => {
 
          const printWindow = window.open('', '', 'height=800,width=800,scrollbars=yes');
          if (printWindow) {
-            printWindow.document.write('<html><head><title>');
+            printWindow.document.write('<!DOCTYPE html><html lang="id"><head><title>');
             printWindow.document.write(document.title);
-            printWindow.document.write('</title>');
+            printWindow.document.write('</title><meta charset="UTF-8">');
             printWindow.document.write('<style>');
             printWindow.document.write(styles);
             printWindow.document.write(`
               @media print {
                 @page { size: A4; margin: 15mm; }
-                body { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: 'Times New Roman', Times, serif; font-size: 10pt; line-height: 1.2; }
+                body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; font-family: 'Times New Roman', Times, serif; font-size: 10pt; line-height: 1.2; background-color: white !important; }
                 .no-print { display: none !important; }
-                 .print-container { width: 100%; max-width: 100%; margin: 0; padding: 0; border: none; box-shadow: none; break-inside: avoid; }
+                 .print-container { width: 100%; max-width: 100%; margin: 0; padding: 0; border: none; box-shadow: none; break-inside: avoid; background-color: white !important; }
                  h3 { margin-top: 0.5rem; margin-bottom: 0.25rem; }
                  .grid > div { break-inside: avoid; }
+                 img { max-width: 100%; height: auto; object-fit: contain; } /* Ensure images print well */
               }
             `);
             printWindow.document.write('</style>');
@@ -274,7 +285,7 @@ const CetakFormulirPageContent = () => {
        }, 0);
    };
 
-    if (loading) {
+    if (!isClient || loading) { // Show loading if not client or data is loading
       return <div className="flex justify-center items-center h-screen"><Loader2 className="mr-2 h-8 w-8 animate-spin" /><span>Memuat data formulir...</span></div>;
     }
 
@@ -297,6 +308,7 @@ const CetakFormulirPageContent = () => {
            </Button>
          </div>
         <div ref={printRef} className="print-container bg-white shadow-md print:shadow-none">
+          {/* Pass letterheadUri to the print component */}
           <FormulirPendaftaranPrint data={data} />
         </div>
       </div>
@@ -307,16 +319,32 @@ const CetakFormulirPageContent = () => {
 const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
+    const [isClient, setIsClient] = useState(false);
 
-    useEffect(() => {
-        if (!authLoading && !user) {
-            // Redirect to login if not authenticated after loading
-            console.log("AuthCheck: Not authenticated, redirecting to login.");
-            router.push('/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search)); // Redirect back after login
-        }
-    }, [authLoading, user, router]);
+     useEffect(() => {
+         setIsClient(true);
+     }, []);
 
-    if (authLoading) {
+     useEffect(() => {
+        if (!isClient || authLoading) return;
+
+        const isPrintPage = pathname?.startsWith('/admin/cetak-');
+        const isAdminPath = pathname?.startsWith('/admin');
+        const isLoginPage = pathname === '/login';
+
+        if (!user && isAdminPath && !isLoginPage && !isPrintPage) {
+             console.log("AuthCheck: User not authenticated on protected admin page, redirecting from", pathname);
+             const redirectUrl = `/login?redirect=${encodeURIComponent(pathname || '/')}`;
+             router.push(redirectUrl);
+         } else if (user && isLoginPage) {
+             console.log("AuthCheck: User authenticated on login page, redirecting to /admin");
+             router.push('/admin');
+         }
+     }, [isClient, authLoading, user, router, pathname]);
+
+
+    if (!isClient || authLoading) {
         return (
             <div className="flex justify-center items-center h-screen">
                 <Loader2 className="mr-2 h-8 w-8 animate-spin" />
@@ -325,17 +353,13 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         );
     }
 
-    if (!user) {
-         // Render minimal content or null while redirecting
-         return (
-             <div className="flex justify-center items-center h-screen">
-                 <p>Mengarahkan ke halaman login...</p>
-             </div>
-         );
+    // Render children if user exists OR on login page OR on a print page
+    if (user || pathname?.startsWith('/login') || pathname?.startsWith('/admin/cetak-')) {
+        return <>{children}</>;
     }
 
-    // If authenticated and not loading, render the actual page content
-    return <>{children}</>;
+    // Fallback for non-user on protected admin pages
+    return null;
 };
 
 

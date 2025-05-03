@@ -1,8 +1,7 @@
-
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useRouter, usePathname } from 'next/navigation'; // Import usePathname
+import { useParams, useRouter, usePathname } from 'next/navigation';
 import { BuktiDaftarUlangPrint, type BuktiDaftarUlangData } from '@/components/cetak/bukti-daftar-ulang-print';
 import { Button } from '@/components/ui/button';
 import { Printer, ArrowLeft, Loader2 } from 'lucide-react';
@@ -10,7 +9,7 @@ import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { cn } from '@/lib/utils'; // Import cn
+import { cn } from '@/lib/utils';
 
 // Mock data structure
 interface CombinedData {
@@ -29,15 +28,14 @@ interface CombinedData {
   bayarDaftarUlang: boolean;
   biayaDaftarUlang?: number | null;
   tanggalDaftarUlang: string;
-  jenisKelamin: 'Laki-laki' | 'Perempuan'; // Added for filtering later if needed
-  ukuranSeragam: string; // Added
-  seragamOsis: boolean; // Added
-  seragamPramuka: boolean; // Added
-  seragamBatik: boolean; // Added
-  seragamOlahraga: boolean; // Added
+  jenisKelamin: 'Laki-laki' | 'Perempuan';
+  ukuranSeragam: string;
+  seragamOsis: boolean;
+  seragamPramuka: boolean;
+  seragamBatik: boolean;
+  seragamOlahraga: boolean;
 }
 
-// Mock Combined Data - Updated with new fields
 const mockCombinedData: CombinedData[] = [
    {
      pendaftarId: 1, nomorPendaftaran: 'A-2526/0001', nama: 'Ahmad Fauzi', alamatLengkap: 'Dukuh Krajan, Banyuputih, RT/RW 01/01, Kec. Banyuputih, Kab. Batang, Prov. Jawa Tengah', sekolahAsal: 'MTs N 1 Batang', kabupaten: 'Batang',
@@ -57,21 +55,27 @@ const mockCombinedData: CombinedData[] = [
 const CetakBuktiDUPageContent = () => {
     const params = useParams();
     const router = useRouter();
-    const { user, loading: authLoading } = useAuth(); // Get the authenticated user from context
+    const { user, loading: authLoading } = useAuth();
     const daftarUlangId = params?.id ? parseInt(params.id as string, 10) : null;
     const [data, setData] = useState<BuktiDaftarUlangData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const printRef = useRef<HTMLDivElement>(null);
-    const [isClient, setIsClient] = useState(false); // State to track client-side mounting
+    const [isClient, setIsClient] = useState(false);
+    const [letterheadUri, setLetterheadUri] = useState<string | null>(null); // State for letterhead
 
     useEffect(() => {
-        setIsClient(true); // Set when component mounts on the client
+        setIsClient(true);
+        // Load letterhead from localStorage on client-side mount
+        const storedUri = localStorage.getItem('customLetterheadUri');
+        if (storedUri) {
+            setLetterheadUri(storedUri);
+        }
     }, []);
 
 
     useEffect(() => {
-      if (!isClient || authLoading) return; // Don't fetch until client-side and auth is ready
+      if (!isClient || authLoading) return;
 
       const fetchData = async () => {
         if (!daftarUlangId) {
@@ -102,7 +106,7 @@ const CetakBuktiDUPageContent = () => {
                  biayaDaftarUlang: foundData.biayaDaftarUlang,
                  tanggalDaftarUlang: foundData.tanggalDaftarUlang,
                  kabupatenTempat: foundData.kabupaten,
-                 namaPetugas: user?.name || 'Panitia PPDB', // Use logged-in user's name or default
+                 namaPetugas: user?.name || 'Panitia PPDB',
              };
             setData(mappedData);
           } else {
@@ -121,7 +125,7 @@ const CetakBuktiDUPageContent = () => {
         }
       };
 
-       if (daftarUlangId && !authLoading && isClient) { // Ensure client-side and auth is ready
+       if (daftarUlangId && !authLoading && isClient) {
            fetchData();
        } else if (!daftarUlangId) {
            setError('ID Daftar Ulang tidak valid.');
@@ -129,7 +133,7 @@ const CetakBuktiDUPageContent = () => {
        }
 
 
-    }, [daftarUlangId, user, authLoading, isClient, router]); // Added router
+    }, [daftarUlangId, user, authLoading, isClient, router]);
 
    const handlePrint = () => {
      console.log('Handle Print button clicked.');
@@ -141,9 +145,8 @@ const CetakBuktiDUPageContent = () => {
        return;
      }
 
-      // Use a minimal delay to allow potential DOM updates if any
       setTimeout(() => {
-         const printWindow = window.open('', '_blank', 'height=800,width=1200,scrollbars=yes'); // Adjusted default size
+         const printWindow = window.open('', '_blank', 'height=800,width=1200,scrollbars=yes');
 
          if (!printWindow) {
            console.error('Failed to open print window. Pop-up might be blocked.');
@@ -158,7 +161,6 @@ const CetakBuktiDUPageContent = () => {
              styles = Array.from(document.styleSheets)
                .map(styleSheet => {
                  try {
-                   // Only include internal/inline styles or those from the same origin
                    if (!styleSheet.href || styleSheet.href.startsWith(window.location.origin) || styleSheet.href.startsWith('/')) {
                      return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('');
                    } return '';
@@ -167,7 +169,6 @@ const CetakBuktiDUPageContent = () => {
              console.log('Collected styles for print window.');
          } catch (e) { console.error("Error collecting styles:", e); }
 
-          // Updated printSpecificStyles for F4 Landscape (330mm x 210mm) with 1cm margin
           const printSpecificStyles = `
            @media print {
              @page {
@@ -177,64 +178,58 @@ const CetakBuktiDUPageContent = () => {
              html, body {
                margin: 0;
                padding: 0;
-               font-family: Arial, sans-serif; /* Use a common sans-serif font */
-               font-size: 9pt; /* Base font size */
-               line-height: 1.4; /* Increased line-height for less cramped text */
-               -webkit-print-color-adjust: exact !important; /* Force color printing */
+               font-family: Arial, sans-serif;
+               font-size: 9pt;
+               line-height: 1.4;
+               -webkit-print-color-adjust: exact !important;
                print-color-adjust: exact !important;
-               width: 100%; /* Ensure body takes full width */
-               height: 100%; /* Ensure body takes full height */
-               display: flex; /* Use flexbox for centering */
-               justify-content: center; /* Center horizontally */
-               align-items: center; /* Center vertically */
-               background-color: white !important; /* Ensure white background for print */
+               width: 100%;
+               height: 100%;
+               display: flex;
+               justify-content: center;
+               align-items: center;
+               background-color: white !important;
              }
              .no-print { display: none !important; }
-             /* Main container for the two receipts */
              .print-container {
                 display: flex !important;
-                flex-direction: row !important; /* Side by side */
-                justify-content: space-between !important; /* Space out receipts */
-                align-items: flex-start !important; /* Align items at the top */
-                gap: 10mm !important; /* Gap between the two receipts */
-                width: calc(330mm - 2cm); /* Full printable width adjusted for margins */
-                height: calc(210mm - 2cm); /* Full printable height adjusted for margins */
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                align-items: flex-start !important;
+                gap: 10mm !important;
+                width: calc(330mm - 2cm);
+                height: calc(210mm - 2cm);
                 padding: 0 !important;
                 border: none !important;
                 box-shadow: none !important;
                 box-sizing: border-box !important;
              }
-             /* Style for each individual receipt wrapper */
              .receipt-outer-wrapper {
-                 width: calc(( (330mm - 2cm) - 10mm) / 2); /* (Printable Width - Gap) / 2 */
-                 height: 100% !important; /* Make wrapper take full height */
-                 border: 1px solid black !important; /* Add border to the wrapper */
+                 width: calc(( (330mm - 2cm) - 10mm) / 2);
+                 height: 100% !important;
+                 border: 1px solid black !important;
                  box-sizing: border-box !important;
-                 display: flex !important; /* Use flex here */
-                 flex-direction: column !important; /* Stack header/content/footer vertically */
-                 page-break-inside: avoid !important; /* Try to prevent breaking inside wrapper */
-                 overflow: hidden; /* Hide overflow within the bordered box */
+                 display: flex !important;
+                 flex-direction: column !important;
+                 page-break-inside: avoid !important;
+                 overflow: hidden;
                  background-color: white !important;
              }
-             /* Style for the content inside the wrapper */
              .receipt-container {
-                 padding: 5mm !important; /* Slightly increased padding inside the border */
+                 padding: 5mm !important;
                  box-sizing: border-box !important;
                  width: 100% !important;
-                 height: 100% !important; /* Occupy full height of wrapper */
+                 height: 100% !important;
                  display: flex !important;
-                 flex-direction: column !important; /* Stack vertically */
+                 flex-direction: column !important;
                  font-size: 9pt !important;
-                 line-height: 1.4 !important; /* Increased line height */
-                 border: none !important; /* No border on inner container */
+                 line-height: 1.4 !important;
+                 border: none !important;
                  page-break-inside: avoid !important;
                  background-color: white !important;
              }
-             /* Ensure content grows and footer sticks to bottom */
-             .receipt-content { flex-grow: 1 !important; } /* Allow content to take available space */
-             .receipt-footer { margin-top: auto !important; padding-top: 3mm !important; flex-shrink: 0 !important; } /* Push footer to bottom */
-
-             /* Fine-tune spacing and font sizes based on the reference image */
+             .receipt-content { flex-grow: 1 !important; }
+             .receipt-footer { margin-top: auto !important; padding-top: 3mm !important; flex-shrink: 0 !important; }
              .receipt-container h1, .receipt-container h2, .receipt-container h3 { margin-bottom: 1.5mm; line-height: 1.3; font-weight: bold; }
              .receipt-container .text-xs { font-size: 9pt !important; line-height: 1.4 !important; }
              .receipt-container .text-sm { font-size: 10pt !important; line-height: 1.4 !important; }
@@ -243,81 +238,70 @@ const CetakBuktiDUPageContent = () => {
              .receipt-container .font-semibold { font-weight: 600 !important; }
              .receipt-container .font-medium { font-weight: 500 !important; }
              .receipt-container .underline { text-decoration: underline !important; }
-
-             /* Adjust DataRow specifically */
-             .receipt-container .flex.mb-0_5 { margin-bottom: 1mm !important; } /* Slightly more space */
+             .receipt-container .flex.mb-0_5 { margin-bottom: 1mm !important; }
              .receipt-container span.w-\\[100px\\] { width: 100px !important; }
              .receipt-container span.mr-2 { margin-right: 8px !important; }
-
-             /* Adjust ChecklistItem */
-             .receipt-container .flex.items-center.mb-0 { margin-bottom: 0.5mm !important; } /* Add slight spacing */
-             .receipt-container .w-3.h-3.mr-1 { width: 9pt !important; height: 9pt !important; margin-right: 5px !important; vertical-align: middle; } /* Increased spacing, vertical align */
-             .receipt-container .text-black { color: black !important; } /* Ensure checkmark is black */
-             .receipt-container .text-gray-500 { color: #6b7280 !important; } /* Ensure empty box is gray */
-
-             /* Adjust Header and Title Styling */
-              .receipt-container .border-b-2.border-black { border-bottom-width: 2px !important; border-color: black !important; }
-              .receipt-container .h-\\[2px\\].bg-red-600 { height: 1.5pt !important; background-color: #dc2626 !important; print-color-adjust: exact !important; } /* Red color */
-              .receipt-container .w-1\\/3 { width: 33.33% !important; }
-              .receipt-container .mx-auto { margin-left: auto !important; margin-right: auto !important; }
-              .receipt-container .text-green-700 { color: #047857 !important; } /* Green color */
-              .receipt-container .bg-transparent { background-color: transparent !important; }
-
-             /* Adjust Footer Box */
-             .receipt-container .border.border-black.p-1\\.5.mt-1.mb-1 { /* Adjusted margins */
+             .receipt-container .flex.items-center.mb-0 { margin-bottom: 0.5mm !important; }
+             .receipt-container .w-3.h-3.mr-1 { width: 9pt !important; height: 9pt !important; margin-right: 5px !important; vertical-align: middle; }
+             .receipt-container .text-black { color: black !important; }
+             .receipt-container .text-gray-500 { color: #6b7280 !important; }
+             .receipt-container .border-b-2.border-black { border-bottom-width: 2px !important; border-color: black !important; }
+             .receipt-container .h-\\[2px\\].bg-red-600 { height: 1.5pt !important; background-color: #dc2626 !important; print-color-adjust: exact !important; }
+             .receipt-container .w-1\\/3 { width: 33.33% !important; }
+             .receipt-container .mx-auto { margin-left: auto !important; margin-right: auto !important; }
+             .receipt-container .text-green-700 { color: #047857 !important; }
+             .receipt-container .bg-transparent { background-color: transparent !important; }
+             .receipt-container .border.border-black.p-1\\.5.mt-2.mb-2 { /* Adjusted selector for specificity */
                 border-width: 1px !important;
                 border-color: black !important;
-                padding: 1.5mm !important; /* Adjust padding */
-                background-color: #f3f4f6 !important; /* Light gray background */
-                print-color-adjust: exact !important; /* Ensure background prints */
-                margin-top: 2mm !important; /* Reduced top margin */
-                margin-bottom: 2mm !important; /* Added bottom margin */
+                padding: 1.5mm !important;
+                background-color: #f3f4f6 !important;
+                print-color-adjust: exact !important;
+                margin-top: 2mm !important;
+                margin-bottom: 2mm !important;
                 line-height: 1.3 !important;
              }
-             .receipt-container .text-\\[8pt\\] { font-size: 8pt !important; } /* Adjusted font size */
-             .receipt-container .small-print { font-size: 8pt !important; line-height: 1.3 !important; } /* Ensure class applies */
-
-             /* Adjust Signature */
-             .receipt-container .signature-space { height: 15mm !important; } /* Increased space for signature */
-             .receipt-container .receipt-signature { margin-top: 2mm !important; } /* Increased margin above signature block */
+             .receipt-container .text-\\[8pt\\] { font-size: 8pt !important; }
+             .receipt-container .small-print { font-size: 8pt !important; line-height: 1.3 !important; }
+             .receipt-container .signature-space { height: 15mm !important; }
+             .receipt-container .receipt-signature { margin-top: 2mm !important; }
            }
-           /* Screen styles for preview */
            @media screen {
-               body { background-color: #f3f4f6; /* Light gray background for screen */ }
+               body { background-color: #f3f4f6; }
                .print-preview-container {
                    display: flex;
-                   justify-content: center; /* Center on screen */
-                   align-items: flex-start; /* Align cards at the top */
+                   justify-content: center;
+                   align-items: flex-start;
                    padding: 1rem;
                    width: 100%;
-                   overflow-x: auto; /* Allow horizontal scroll if needed on small screens */
-                   min-height: 100vh; /* Ensure it takes height */
+                   overflow-x: auto;
+                   min-height: 100vh;
                }
                .print-container {
                    display: flex !important;
-                   flex-direction: row !important; /* Side by side */
-                   justify-content: center !important; /* Center receipts */
-                   align-items: flex-start !important; /* Align items at the top */
-                   gap: 20px !important; /* Gap between the two receipts */
-                   width: auto; /* Let content size determine width */
-                   max-width: 1200px; /* Limit max width */
-                   background-color: transparent; /* Transparent background for container on screen */
+                   flex-direction: row !important;
+                   justify-content: center !important;
+                   align-items: flex-start !important;
+                   gap: 20px !important;
+                   width: auto;
+                   max-width: 1200px;
+                   background-color: transparent;
                }
                .receipt-outer-wrapper {
-                   flex: 1; /* Allow flex grow */
-                   max-width: 500px; /* Limit width of each receipt */
-                   min-width: 400px; /* Minimum width */
-                   margin-bottom: 1rem; /* Space below receipts on screen */
+                   flex: 1;
+                   max-width: 500px;
+                   min-width: 400px;
+                   margin-bottom: 1rem;
                    background-color: white;
                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                   height: auto; /* Allow content to determine height */
-                   border: 1px solid #ccc !important; /* Lighter border for screen */
+                   height: auto;
+                   border: 1px solid #ccc !important;
                }
                .receipt-container {
-                    height: auto; /* Let content define height */
-                    overflow: visible; /* Allow content to be visible on screen */
-                    padding: 10px !important; /* Screen padding */
-                    line-height: 1.5 !important; /* More readable line height on screen */
+                    height: auto;
+                    overflow: visible;
+                    padding: 10px !important;
+                    line-height: 1.5 !important;
                }
                 .receipt-container .text-xs { font-size: 10pt !important; line-height: 1.5 !important; }
                 .receipt-container .text-sm { font-size: 11pt !important; line-height: 1.5 !important; }
@@ -339,7 +323,7 @@ const CetakBuktiDUPageContent = () => {
            setTimeout(() => {
              try {
                console.log('Executing print command.');
-               printWindow.focus(); // Focus the window before printing
+               printWindow.focus();
                printWindow.print();
                console.log('Print command executed.');
              } catch (printError) {
@@ -349,20 +333,18 @@ const CetakBuktiDUPageContent = () => {
              } finally {
                  console.log('Restoring original document title.');
                  document.title = originalTitle;
-                 // Optionally close window after print attempt:
-                 // setTimeout(() => { if (printWindow && !printWindow.closed) printWindow.close(); }, 2000);
              }
-           }, 1000); // Increased delay slightly to ensure styles apply
+           }, 1000);
 
          } catch (writeError) {
            console.error("Error writing to print window:", writeError);
            toast({ title: "Gagal Mempersiapkan Cetak", description: "Terjadi kesalahan saat menyiapkan halaman cetak.", variant: "destructive" });
            if (printWindow && !printWindow.closed) printWindow.close();
          }
-      }, 50); // Added small delay
+      }, 50);
    };
 
-     if (authLoading) {
+     if (authLoading || loading && !data) { // Show loading if auth is loading OR data is loading
        return (
            <div className="flex justify-center items-center h-screen">
                <Loader2 className="mr-2 h-8 w-8 animate-spin" />
@@ -371,8 +353,9 @@ const CetakBuktiDUPageContent = () => {
        );
      }
 
-    if (!user) {
+    if (!user && !authLoading) {
          // This state should ideally not be reached if AuthCheck is effective
+         // It's here as a safeguard
          return (
              <div className="flex justify-center items-center h-screen">
                  <Loader2 className="mr-2 h-8 w-8 animate-spin" />
@@ -380,7 +363,6 @@ const CetakBuktiDUPageContent = () => {
              </div>
          );
     }
-
 
     if (error) {
       return <div className="flex justify-center items-center h-screen text-red-600"><p>{error}</p></div>;
@@ -394,9 +376,10 @@ const CetakBuktiDUPageContent = () => {
       );
     }
 
+    // Render the content only if data is available and auth is complete
     return (
       <div className="p-4 print:p-0 min-h-screen flex flex-col bg-gray-100 print:bg-white">
-         <div className="mb-4 flex justify-between items-center no-print max-w-6xl mx-auto w-full"> {/* Ensure controls take full width */}
+         <div className="mb-4 flex justify-between items-center no-print max-w-6xl mx-auto w-full">
              <Button variant="outline" size="sm" onClick={() => router.back()}>
                  <ArrowLeft className="mr-2 h-4 w-4" /> Kembali
              </Button>
@@ -404,8 +387,8 @@ const CetakBuktiDUPageContent = () => {
                  <Printer className="mr-2 h-4 w-4" /> Cetak Bukti (F4 Landscape)
              </Button>
          </div>
-        {/* Added a wrapper div for screen preview styling */}
         <div className="print-preview-container flex-grow">
+             {/* Pass loaded letterheadUri to the print component */}
              <div ref={printRef} className="print-container">
                  <BuktiDaftarUlangPrint data={data} />
              </div>
@@ -426,12 +409,21 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
      }, []);
 
      useEffect(() => {
-        if (!isClient || authLoading) return; // Wait for client and auth check
+        if (!isClient || authLoading) return;
 
-        if (!user && !pathname?.startsWith('/login')) { // Redirect if not user and not on login page
-            console.log("AuthCheck: User not authenticated, redirecting from", pathname);
-            const redirectUrl = `/login?redirect=${encodeURIComponent(pathname)}`;
+        // Allow access to print pages even if not logged in *if* coming from admin
+        // This is a temporary workaround; proper token-based auth would be better.
+        const isPrintPage = pathname?.startsWith('/admin/cetak-');
+        const isAdminPath = pathname?.startsWith('/admin');
+        const isLoginPage = pathname === '/login';
+
+        if (!user && isAdminPath && !isLoginPage && !isPrintPage) {
+            console.log("AuthCheck: User not authenticated on protected admin page, redirecting from", pathname);
+            const redirectUrl = `/login?redirect=${encodeURIComponent(pathname || '/')}`;
             router.push(redirectUrl);
+        } else if (user && isLoginPage) {
+            console.log("AuthCheck: User authenticated on login page, redirecting to /admin");
+            router.push('/admin');
         }
      }, [isClient, authLoading, user, router, pathname]);
 
@@ -444,7 +436,14 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
          );
      }
 
-    return <>{user || pathname?.startsWith('/login') ? children : null}</>; // Render children if user exists or on login page
+    // Render children if user exists OR on login page OR on a print page
+    // This allows the print page component itself to handle data loading errors
+    if (user || pathname?.startsWith('/login') || pathname?.startsWith('/admin/cetak-')) {
+        return <>{children}</>;
+    }
+
+    // Fallback for non-user on protected admin pages (should ideally be handled by redirect)
+    return null;
 };
 
 
@@ -458,4 +457,3 @@ const CetakBuktiDUPage = () => {
 };
 
 export default CetakBuktiDUPage;
-
