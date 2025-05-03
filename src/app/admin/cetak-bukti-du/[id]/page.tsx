@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, usePathname } from 'next/navigation'; // Import usePathname
 import { BuktiDaftarUlangPrint, type BuktiDaftarUlangData } from '@/components/cetak/bukti-daftar-ulang-print';
 import { Button } from '@/components/ui/button';
 import { Printer, ArrowLeft, Loader2 } from 'lucide-react';
@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
+import { cn } from '@/lib/utils'; // Import cn
 
 // Mock data structure
 interface CombinedData {
@@ -143,49 +144,60 @@ const CetakBuktiDUPageContent = () => {
          } catch (e) { console.error("Error collecting styles:", e); }
 
          // Define F4 Landscape size in mm (8.5 x 13 inches approx 215.9mm x 330.2mm)
+         // Adjusted margins and font sizes for better F4 fit
          const printSpecificStyles = `
            @media print {
              @page { size: 330.2mm 215.9mm; margin: 10mm; } /* F4 Landscape */
-             html, body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 9pt; line-height: 1.15; -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 100%; height: 100%; }
+             html, body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 9pt; line-height: 1.1; -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 100%; height: 100%; }
              .no-print { display: none !important; }
              .print-container { display: flex !important; justify-content: space-between !important; align-items: flex-start !important; gap: 10mm !important; width: 100% !important; height: 100% !important; padding: 0 !important; border: none !important; box-shadow: none !important; }
-             .receipt-container { flex: 1 !important; max-width: calc(50% - 5mm) !important; border: 1px solid black !important; padding: 4mm !important; box-sizing: border-box !important; height: 100% !important; overflow: hidden !important; break-inside: avoid !important; font-size: 8pt !important; line-height: 1.1 !important; }
+             .receipt-container { flex: 1 !important; max-width: calc(50% - 5mm) !important; border: 1px solid black !important; padding: 5mm !important; /* Increased padding */ box-sizing: border-box !important; height: 100% !important; overflow: hidden !important; break-inside: avoid !important; font-size: 9pt !important; /* Slightly larger base font */ line-height: 1.15 !important; /* Slightly looser line height */ }
              .receipt-container h1, .receipt-container h2, .receipt-container h3 { margin-bottom: 1mm; line-height: 1.1; }
-             .receipt-container .text-xs { font-size: 8pt !important; line-height: 1.1 !important; }
-             .receipt-container .text-sm { font-size: 9pt !important; line-height: 1.1 !important; }
-             .receipt-container .text-base { font-size: 10pt !important; line-height: 1.1 !important; }
+             /* Adjust specific text sizes for better readability */
+             .receipt-container .text-xs { font-size: 9pt !important; line-height: 1.15 !important; }
+             .receipt-container .text-sm { font-size: 10pt !important; line-height: 1.15 !important; }
+             .receipt-container .text-base { font-size: 11pt !important; line-height: 1.15 !important; }
              .receipt-container .font-bold { font-weight: bold !important; }
              .receipt-container .font-semibold { font-weight: 600 !important; }
              .receipt-container .font-medium { font-weight: 500 !important; }
-             .receipt-container .mb-0_5 { margin-bottom: 0.5mm !important; }
-             .receipt-container .mb-1 { margin-bottom: 1mm !important; }
-             .receipt-container .mt-1 { margin-top: 1mm !important; }
-             .receipt-container .my-1 { margin-top: 1mm !important; margin-bottom: 1mm !important; }
-             .receipt-container .p-1 { padding: 1mm !important; }
-             .receipt-container .p-2 { padding: 4mm !important; } /* Use the container's padding */
-             .receipt-container .pb-0_5 { padding-bottom: 0.5mm !important; }
-             .receipt-container .mr-1 { margin-right: 1mm !important; }
-             .receipt-container .ml-1 { margin-left: 1mm !important; }
-             .receipt-container .ml-2 { margin-left: 2mm !important; }
-             .receipt-container .w-8 { width: 20pt !important; height: 20pt !important; }
-             .receipt-container .h-8 { height: 20pt !important; }
-             .receipt-container .w-5 { width: 12pt !important; height: 12pt !important; }
-             .receipt-container .h-5 { height: 12pt !important; }
-             .receipt-container .w-3 { width: 8pt !important; height: 8pt !important; }
-             .receipt-container .h-3 { height: 8pt !important; }
-             .receipt-container .w-\\[70px\\] { width: 70px !important; }
-             .receipt-container .text-\\[9px\\] { font-size: 7pt !important; }
-             .receipt-container .text-\\[8pt\\] { font-size: 8pt !important; }
-             .receipt-container .text-\\[7pt\\] { font-size: 7pt !important; }
-             .receipt-container .h-5 { height: 10pt !important; } /* Reduced signature space */
+             .receipt-container .mb-0_5 { margin-bottom: 1mm !important; } /* Increased default margin */
+             .receipt-container .mb-1 { margin-bottom: 1.5mm !important; }
+             .receipt-container .mt-1 { margin-top: 1.5mm !important; }
+             .receipt-container .my-1 { margin-top: 1.5mm !important; margin-bottom: 1.5mm !important; }
+             .receipt-container .p-1 { padding: 1.5mm !important; }
+             .receipt-container .p-2 { padding: 5mm !important; } /* Use the container's padding */
+             .receipt-container .pb-0_5 { padding-bottom: 1mm !important; }
+             .receipt-container .mr-1 { margin-right: 1.5mm !important; }
+             .receipt-container .ml-1 { margin-left: 1.5mm !important; }
+             .receipt-container .ml-2 { margin-left: 3mm !important; }
+             /* Adjust icon/element sizes */
+             .receipt-container .w-8 { width: 24pt !important; height: 24pt !important; }
+             .receipt-container .h-8 { height: 24pt !important; }
+             .receipt-container .w-5 { width: 15pt !important; height: 15pt !important; }
+             .receipt-container .h-5 { height: 15pt !important; }
+             .receipt-container .w-3 { width: 10pt !important; height: 10pt !important; } /* Larger checklist icon */
+             .receipt-container .h-3 { height: 10pt !important; }
+             .receipt-container .w-\\[70px\\] { width: 80px !important; } /* Slightly wider label */
+             .receipt-container .text-\\[9px\\] { font-size: 8pt !important; }
+             .receipt-container .text-\\[8pt\\] { font-size: 9pt !important; } /* Base adjusted up */
+             .receipt-container .text-\\[7pt\\] { font-size: 8pt !important; }
+             .receipt-container .h-5 { height: 15pt !important; } /* Slightly more signature space */
+             .receipt-container .signature-space { height: 6mm !important; } /* Explicit signature space height */
+             .receipt-container .small-print { font-size: 8pt !important; line-height: 1.1 !important; } /* For footer box */
+
            }
            @media screen {
                .print-container {
-                   /* Adjust max-width for better screen viewing */
-                   max-width: 1100px; /* Example: Limit width on screen */
+                   /* Adjust max-width for better screen viewing - make it wide enough */
+                   max-width: 1100px; /* F4 width approx */
                    margin-left: auto;
                    margin-right: auto;
                }
+               /* Add styles for better screen preview */
+                .receipt-container {
+                     height: calc(215.9mm * 0.8); /* Simulate aspect ratio on screen */
+                     overflow-y: auto; /* Allow scrolling if content overflows */
+                }
            }
          `;
 
@@ -234,8 +246,9 @@ const CetakBuktiDUPageContent = () => {
     }
 
     return (
-      <div className="bg-gray-100 p-4 print:bg-white print:p-0">
-         <div className="mb-4 flex justify-between items-center no-print max-w-5xl mx-auto"> {/* Added max-w and mx-auto */}
+      // Added min-h-screen and flex container for better screen view centering
+      <div className="bg-gray-100 p-4 print:bg-white print:p-0 min-h-screen flex flex-col">
+         <div className="mb-4 flex justify-between items-center no-print max-w-5xl mx-auto w-full"> {/* Ensure controls take full width */}
              <Button variant="outline" size="sm" onClick={() => router.back()}>
                  <ArrowLeft className="mr-2 h-4 w-4" /> Kembali
              </Button>
@@ -244,7 +257,7 @@ const CetakBuktiDUPageContent = () => {
              </Button>
          </div>
          {/* Apply max-width only for screen view, print styles override it */}
-        <div ref={printRef} className="print-container">
+        <div ref={printRef} className="print-container flex-grow"> {/* Added flex-grow */}
           <BuktiDaftarUlangPrint data={data} />
         </div>
       </div>
@@ -255,7 +268,7 @@ const CetakBuktiDUPageContent = () => {
 const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
-    const pathname = usePathname();
+    const pathname = usePathname(); // Use usePathname hook
 
     useEffect(() => {
         // Only redirect if not already on login page and auth check is complete
@@ -298,6 +311,3 @@ const CetakBuktiDUPage = () => {
 };
 
 export default CetakBuktiDUPage;
-
-
-    
