@@ -18,6 +18,15 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserPlus } from 'lucide-react';
+import { useState, useEffect } from 'react'; // Import useState and useEffect
+
+// Mock Petugas data structure for storage
+interface PetugasAccount {
+    nama: string;
+    username: string;
+    password: string; // IMPORTANT: Storing plain text password is insecure. Only for mock purposes.
+    isAdmin: boolean;
+}
 
 // Validation Schema
 const petugasSchema = z.object({
@@ -32,6 +41,20 @@ const petugasSchema = z.object({
 
 
 export default function InputPetugasPage() {
+    const [petugasList, setPetugasList] = useState<PetugasAccount[]>([]);
+
+    // Load existing petugas from local storage on mount
+    useEffect(() => {
+        const storedPetugas = localStorage.getItem('petugasAccounts');
+        if (storedPetugas) {
+            try {
+                setPetugasList(JSON.parse(storedPetugas));
+            } catch (e) {
+                console.error("Error parsing stored petugas data:", e);
+            }
+        }
+    }, []);
+
 
     // TODO: Add authorization check - only admin should access this page
 
@@ -47,14 +70,34 @@ export default function InputPetugasPage() {
 
 
   async function onSubmit(values: z.infer<typeof petugasSchema>) {
-    // Exclude confirmPassword before sending to backend
+    // Exclude confirmPassword before saving
     const { confirmPassword, ...dataToSubmit } = values;
 
-    console.log('Data Petugas Submitted:', dataToSubmit);
-    // --- TODO: Replace with actual API call to create petugas ---
+    // Check if username already exists (case-insensitive for robustness)
+     const usernameExists = petugasList.some(p => p.username.toLowerCase() === dataToSubmit.username.toLowerCase());
+     if (usernameExists) {
+         form.setError("username", { type: "manual", message: "Username sudah digunakan." });
+         toast({
+             title: "Gagal!",
+             description: "Username sudah digunakan. Silakan pilih username lain.",
+             variant: "destructive",
+         });
+         return;
+     }
+
+     // Add the new petugas account
+     const newPetugas: PetugasAccount = {
+         ...dataToSubmit,
+         isAdmin: false, // Petugas are not admins
+         // IMPORTANT: Storing plain text password - highly insecure!
+     };
+
+    console.log('Data Petugas Submitted:', newPetugas);
+    // --- Mock saving to Local Storage ---
     try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const updatedList = [...petugasList, newPetugas];
+        localStorage.setItem('petugasAccounts', JSON.stringify(updatedList));
+        setPetugasList(updatedList); // Update component state
 
         toast({
             title: "Sukses!",
@@ -65,20 +108,13 @@ export default function InputPetugasPage() {
 
     } catch (error: any) {
         console.error("Error creating petugas:", error);
-        // Handle specific errors from API if possible (e.g., username already exists)
-        let errorMessage = "Terjadi kesalahan saat menambahkan petugas.";
-        if (error.message === 'Username already exists') { // Example check
-            errorMessage = "Username sudah digunakan. Silakan pilih username lain.";
-            form.setError("username", { type: "manual", message: errorMessage });
-        }
-
         toast({
             title: "Gagal!",
-            description: errorMessage,
+            description: "Terjadi kesalahan saat menambahkan petugas.",
             variant: "destructive",
         });
     }
-    // --- End of TODO ---
+    // --- End of Mock ---
   }
 
   return (
@@ -116,7 +152,7 @@ export default function InputPetugasPage() {
                       <Input placeholder="Masukkan username (untuk login)" {...field} />
                     </FormControl>
                      <FormDescription>
-                       Hanya boleh berisi huruf, angka, dan underscore (_).
+                       Hanya boleh berisi huruf, angka, dan underscore (_). Case sensitive.
                      </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -131,6 +167,9 @@ export default function InputPetugasPage() {
                     <FormControl>
                       <Input type="password" placeholder="Masukkan password" {...field} />
                     </FormControl>
+                     <FormDescription>
+                       Minimal 6 karakter. Case sensitive.
+                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -156,10 +195,18 @@ export default function InputPetugasPage() {
           </Form>
         </CardContent>
       </Card>
-       {/* TODO: Add a table or list to display existing petugas with edit/delete options */}
-       {/* <Card className="mt-8">
-           <CardHeader><CardTitle>Daftar Petugas</CardTitle></CardHeader>
-           <CardContent><p className="text-muted-foreground">Tabel petugas akan ditampilkan di sini.</p></CardContent>
+       {/* Optional: Display existing petugas (for debugging/management) */}
+       {/* <Card className="mt-8 max-w-2xl mx-auto">
+           <CardHeader><CardTitle>Daftar Petugas (Mock)</CardTitle></CardHeader>
+           <CardContent>
+            {petugasList.length > 0 ? (
+                <ul>
+                    {petugasList.map(p => <li key={p.username}>{p.nama} ({p.username})</li>)}
+                </ul>
+            ) : (
+                <p className="text-muted-foreground">Belum ada petugas ditambahkan.</p>
+            )}
+           </CardContent>
        </Card> */}
     </div>
   );

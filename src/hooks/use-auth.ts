@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -11,6 +10,15 @@ interface AuthUser {
     username: string; // Add username
     isAdmin: boolean; // Flag to differentiate admin and petugas
 }
+
+// Mock Petugas data structure (mirroring InputPetugasPage)
+interface PetugasAccount {
+    nama: string;
+    username: string;
+    password: string; // IMPORTANT: Storing plain text password is insecure. Only for mock purposes.
+    isAdmin: boolean;
+}
+
 
 // Mock Auth Hook - Replace with actual implementation using Firebase Auth or other provider
 export const useAuth = () => {
@@ -41,7 +49,7 @@ export const useAuth = () => {
                      setLoading(false);
                      console.log("No user found or error parsing, redirecting to login.");
                      // Redirect if on an admin page and not logged in
-                     if (window.location.pathname.startsWith('/admin')) {
+                     if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
                          router.push('/login');
                      }
                  }, 500);
@@ -52,7 +60,7 @@ export const useAuth = () => {
                  setLoading(false);
                  console.log("No user found in storage, redirecting to login.");
                  // Redirect if on an admin page and not logged in
-                 if (window.location.pathname.startsWith('/admin')) {
+                 if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
                      router.push('/login');
                  }
             }, 500);
@@ -66,6 +74,7 @@ export const useAuth = () => {
         await new Promise(resolve => setTimeout(resolve, 500));
 
         // Mock authentication logic
+        // 1. Check for hardcoded admin user
         if (username === 'admin' && password === 'password') {
             const loggedInUser: AuthUser = { name: "Admin Utama", username: "admin", isAdmin: true };
             console.log("Login successful (Admin):", loggedInUser);
@@ -73,23 +82,49 @@ export const useAuth = () => {
             localStorage.setItem('mockUser', JSON.stringify(loggedInUser));
             setLoading(false);
             return true;
-         } else if (username === 'petugas' && password === 'password') { // Add petugas user
-             const loggedInUser: AuthUser = { name: "Petugas PPDB", username: "petugas", isAdmin: false };
-             console.log("Login successful (Petugas):", loggedInUser);
-             setUser(loggedInUser);
-             localStorage.setItem('mockUser', JSON.stringify(loggedInUser));
-             setLoading(false);
-             return true;
-        } else {
-            console.log("Login failed: Invalid credentials");
-            toast({
-                title: "Login Gagal",
-                description: "Username atau password salah.",
-                variant: "destructive",
-            });
-            setLoading(false);
-            return false;
         }
+
+        // 2. Check for petugas users stored in local storage
+        const storedPetugas = localStorage.getItem('petugasAccounts');
+        let petugasList: PetugasAccount[] = [];
+        if (storedPetugas) {
+            try {
+                petugasList = JSON.parse(storedPetugas);
+            } catch (e) {
+                console.error("Error parsing stored petugas accounts:", e);
+                // Handle error appropriately, maybe clear the faulty data
+            }
+        }
+
+        // Find the petugas by username (case-sensitive match)
+        const foundPetugas = petugasList.find(p => p.username === username);
+
+        if (foundPetugas) {
+            // IMPORTANT: Comparing plain text passwords - highly insecure!
+            if (foundPetugas.password === password) {
+                const loggedInUser: AuthUser = {
+                    name: foundPetugas.nama,
+                    username: foundPetugas.username,
+                    isAdmin: foundPetugas.isAdmin // Should be false for petugas
+                };
+                console.log("Login successful (Petugas):", loggedInUser);
+                setUser(loggedInUser);
+                localStorage.setItem('mockUser', JSON.stringify(loggedInUser));
+                setLoading(false);
+                return true;
+            }
+        }
+
+        // 3. If neither admin nor a matching petugas is found
+        console.log("Login failed: Invalid credentials");
+        toast({
+            title: "Login Gagal",
+            description: "Username atau password salah.",
+            variant: "destructive",
+        });
+        setLoading(false);
+        return false;
+
     }, [router]); // Added router dependency to useCallback
 
     const logout = useCallback(async () => {
@@ -110,11 +145,14 @@ export const useAuth = () => {
      const requireAuth = useCallback(() => {
         // Check if loading is complete before potentially redirecting
         if (!loading) {
-            if (!user && window.location.pathname.startsWith('/admin')) {
+            if (!user && typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
                 console.log("RequireAuth: Not logged in, redirecting.");
                 router.push('/login');
             } else {
-                console.log(`RequireAuth: Status - Logged In: ${!!user}`);
+                 // Only log if not redirecting
+                 if (user || (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin'))) {
+                    console.log(`RequireAuth: Status - Logged In: ${!!user}`);
+                 }
             }
         } else {
             console.log("RequireAuth: Still loading auth state...");
@@ -128,20 +166,38 @@ export const useAuth = () => {
         console.log("Attempting to update profile:", { newName, newUsername });
         await new Promise(resolve => setTimeout(resolve, 700)); // Simulate delay
 
-        // Mock logic: Assume username 'admin_new' is taken
-        if (newUsername === 'admin_new') {
+        if (!user) return false; // Should not happen if called when logged in
+
+        // Mock logic: Check if new username conflicts with admin or other petugas
+        const storedPetugas = localStorage.getItem('petugasAccounts');
+        let petugasList: PetugasAccount[] = [];
+        if (storedPetugas) {
+            try { petugasList = JSON.parse(storedPetugas); } catch (e) { console.error("Error parsing petugas list for update check:", e); }
+        }
+
+        const usernameTaken = (newUsername.toLowerCase() === 'admin' && user.username.toLowerCase() !== 'admin') ||
+                              petugasList.some(p => p.username.toLowerCase() === newUsername.toLowerCase() && p.username.toLowerCase() !== user.username.toLowerCase());
+
+        if (usernameTaken) {
              toast({ title: "Update Gagal", description: "Username sudah digunakan.", variant: "destructive" });
              return false;
         }
 
-        if (user) {
-            const updatedUser = { ...user, name: newName, username: newUsername };
-            setUser(updatedUser);
-            localStorage.setItem('mockUser', JSON.stringify(updatedUser)); // Update mock storage
-            console.log("Profile updated locally:", updatedUser);
-            return true;
-        }
-        return false; // Should not happen if called when logged in
+        const updatedUser = { ...user, name: newName, username: newUsername };
+        setUser(updatedUser);
+        localStorage.setItem('mockUser', JSON.stringify(updatedUser)); // Update mock storage
+
+        // Also update the username in the petugas list if the current user is a petugas
+         if (!user.isAdmin) {
+            const updatedPetugasList = petugasList.map(p =>
+                p.username.toLowerCase() === user.username.toLowerCase() ? { ...p, username: newUsername, nama: newName } : p
+            );
+            localStorage.setItem('petugasAccounts', JSON.stringify(updatedPetugasList));
+         }
+
+        console.log("Profile updated locally:", updatedUser);
+        return true;
+
     }, [user]);
 
     const changeUserPassword = useCallback(async (currentPassword: string, newPassword: string): Promise<boolean> => {
@@ -149,17 +205,45 @@ export const useAuth = () => {
         console.log("Attempting to change password...");
         await new Promise(resolve => setTimeout(resolve, 700)); // Simulate delay
 
-        // Mock logic: Assume current password is 'password'
-        if (currentPassword !== 'password') { // Replace 'password' with check against actual current password hash in real app
+         if (!user) return false; // Should not happen if logged out
+
+         let correctCurrentPassword = false;
+
+         // Check admin password
+         if (user.isAdmin && user.username === 'admin' && currentPassword === 'password') {
+             correctCurrentPassword = true;
+             // In a real app, you'd send current/new password to backend for admin
+             console.log("Password changed successfully for admin (mock).");
+         } else if (!user.isAdmin) {
+             // Check petugas password from local storage
+             const storedPetugas = localStorage.getItem('petugasAccounts');
+             let petugasList: PetugasAccount[] = [];
+              if (storedPetugas) {
+                  try { petugasList = JSON.parse(storedPetugas); } catch (e) { console.error("Error parsing petugas list for password check:", e); }
+              }
+              const foundPetugas = petugasList.find(p => p.username.toLowerCase() === user.username.toLowerCase());
+
+              // IMPORTANT: Comparing plain text - insecure!
+              if (foundPetugas && foundPetugas.password === currentPassword) {
+                  correctCurrentPassword = true;
+                  // Update password in the mock storage
+                  const updatedPetugasList = petugasList.map(p =>
+                     p.username.toLowerCase() === user.username.toLowerCase() ? { ...p, password: newPassword } : p
+                  );
+                  localStorage.setItem('petugasAccounts', JSON.stringify(updatedPetugasList));
+                  console.log("Password changed successfully for petugas (mock).");
+              }
+         }
+
+
+        if (!correctCurrentPassword) {
              toast({ title: "Gagal", description: "Password saat ini salah.", variant: "destructive" });
              return false;
         }
 
-        // Simulate successful password change
-        console.log("Password changed successfully (mock).");
-        // In a real app, the backend handles the change. No local user state change needed usually.
+        // Simulate successful password change if current was correct
         return true;
-    }, []);
+    }, [user]);
     // --- End Placeholder Functions ---
 
 
