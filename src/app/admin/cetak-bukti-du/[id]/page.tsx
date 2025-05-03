@@ -51,6 +51,7 @@ const mockCombinedData: CombinedData[] = [
 const CetakBuktiDUPageContent = () => {
     const params = useParams();
     const router = useRouter();
+    const { user } = useAuth(); // Get the authenticated user from context
     const daftarUlangId = params?.id ? parseInt(params.id as string, 10) : null;
     const [data, setData] = useState<BuktiDaftarUlangData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -87,6 +88,7 @@ const CetakBuktiDUPageContent = () => {
                  biayaDaftarUlang: foundData.biayaDaftarUlang,
                  tanggalDaftarUlang: foundData.tanggalDaftarUlang,
                  kabupatenTempat: foundData.kabupaten,
+                 namaPetugas: user?.name || null, // Get petugas name from auth context
              };
             setData(mappedData);
           } else {
@@ -106,7 +108,7 @@ const CetakBuktiDUPageContent = () => {
       };
 
       fetchData();
-    }, [daftarUlangId]);
+    }, [daftarUlangId, user?.name]); // Add user.name as dependency
 
    const handlePrint = () => {
      console.log('Handle Print button clicked.');
@@ -118,6 +120,7 @@ const CetakBuktiDUPageContent = () => {
        return;
      }
 
+      // Use a minimal delay to allow potential DOM updates if any
       setTimeout(() => {
          const printWindow = window.open('', '_blank', 'height=800,width=1100,scrollbars=yes');
 
@@ -147,11 +150,14 @@ const CetakBuktiDUPageContent = () => {
          // Adjusted margins and font sizes for better F4 fit
          const printSpecificStyles = `
            @media print {
-             @page { size: 330.2mm 215.9mm; margin: 10mm; } /* F4 Landscape */
-             html, body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 9pt; line-height: 1.1; -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 100%; height: 100%; }
+             @page {
+               size: 330.2mm 215.9mm; /* F4 Landscape */
+               margin: 10mm 10mm 5mm 10mm; /* top, right, bottom, left - Reduced bottom margin */
+             }
+             html, body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 9pt; line-height: 1.1; -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 100%; height: auto; }
              .no-print { display: none !important; }
-             .print-container { display: flex !important; justify-content: space-between !important; align-items: flex-start !important; gap: 10mm !important; width: 100% !important; height: 100% !important; padding: 0 !important; border: none !important; box-shadow: none !important; }
-             .receipt-container { flex: 1 !important; max-width: calc(50% - 5mm) !important; border: 1px solid black !important; padding: 5mm !important; /* Increased padding */ box-sizing: border-box !important; height: 100% !important; overflow: hidden !important; break-inside: avoid !important; font-size: 9pt !important; /* Slightly larger base font */ line-height: 1.15 !important; /* Slightly looser line height */ }
+             .print-container { display: flex !important; justify-content: space-between !important; align-items: flex-start !important; gap: 10mm !important; width: 100% !important; height: auto !important; padding: 0 !important; border: none !important; box-shadow: none !important; }
+             .receipt-container { flex: 1 !important; max-width: calc(50% - 5mm) !important; border: 1px solid black !important; padding: 4mm 5mm 4mm 5mm !important; /* Adjusted padding T R B L */ box-sizing: border-box !important; height: auto !important; overflow: hidden !important; break-inside: avoid !important; font-size: 9pt !important; line-height: 1.15 !important; }
              .receipt-container h1, .receipt-container h2, .receipt-container h3 { margin-bottom: 1mm; line-height: 1.1; }
              /* Adjust specific text sizes for better readability */
              .receipt-container .text-xs { font-size: 9pt !important; line-height: 1.15 !important; }
@@ -160,43 +166,37 @@ const CetakBuktiDUPageContent = () => {
              .receipt-container .font-bold { font-weight: bold !important; }
              .receipt-container .font-semibold { font-weight: 600 !important; }
              .receipt-container .font-medium { font-weight: 500 !important; }
-             .receipt-container .mb-0_5 { margin-bottom: 1mm !important; } /* Increased default margin */
-             .receipt-container .mb-1 { margin-bottom: 1.5mm !important; }
-             .receipt-container .mt-1 { margin-top: 1.5mm !important; }
-             .receipt-container .my-1 { margin-top: 1.5mm !important; margin-bottom: 1.5mm !important; }
-             .receipt-container .p-1 { padding: 1.5mm !important; }
-             .receipt-container .p-2 { padding: 5mm !important; } /* Use the container's padding */
-             .receipt-container .pb-0_5 { padding-bottom: 1mm !important; }
-             .receipt-container .mr-1 { margin-right: 1.5mm !important; }
-             .receipt-container .ml-1 { margin-left: 1.5mm !important; }
-             .receipt-container .ml-2 { margin-left: 3mm !important; }
+             .receipt-container .mb-0_5 { margin-bottom: 0.8mm !important; } /* Tightened default margin */
+             .receipt-container .mb-1 { margin-bottom: 1.2mm !important; }
+             .receipt-container .mt-1 { margin-top: 1.2mm !important; }
+             .receipt-container .my-1 { margin-top: 1.2mm !important; margin-bottom: 1.2mm !important; }
+             .receipt-container .pb-0_5 { padding-bottom: 0.8mm !important; }
+             .receipt-container .mr-1 { margin-right: 1.2mm !important; }
+             .receipt-container .ml-1 { margin-left: 1.2mm !important; }
+             .receipt-container .ml-2 { margin-left: 2.5mm !important; }
              /* Adjust icon/element sizes */
-             .receipt-container .w-8 { width: 24pt !important; height: 24pt !important; }
-             .receipt-container .h-8 { height: 24pt !important; }
-             .receipt-container .w-5 { width: 15pt !important; height: 15pt !important; }
-             .receipt-container .h-5 { height: 15pt !important; }
-             .receipt-container .w-3 { width: 10pt !important; height: 10pt !important; } /* Larger checklist icon */
-             .receipt-container .h-3 { height: 10pt !important; }
-             .receipt-container .w-\\[70px\\] { width: 80px !important; } /* Slightly wider label */
+             .receipt-container .w-8 { width: 22pt !important; height: 22pt !important; }
+             .receipt-container .h-8 { height: 22pt !important; }
+             .receipt-container .w-5 { width: 14pt !important; height: 14pt !important; }
+             .receipt-container .h-5 { height: 14pt !important; }
+             .receipt-container .w-3 { width: 9pt !important; height: 9pt !important; } /* Slightly smaller checklist */
+             .receipt-container .h-3 { height: 9pt !important; }
+             .receipt-container .w-\\[70px\\] { width: 75px !important; } /* Adjusted label width */
              .receipt-container .text-\\[9px\\] { font-size: 8pt !important; }
-             .receipt-container .text-\\[8pt\\] { font-size: 9pt !important; } /* Base adjusted up */
+             .receipt-container .text-\\[8pt\\] { font-size: 9pt !important; }
              .receipt-container .text-\\[7pt\\] { font-size: 8pt !important; }
-             .receipt-container .h-5 { height: 15pt !important; } /* Slightly more signature space */
-             .receipt-container .signature-space { height: 6mm !important; } /* Explicit signature space height */
-             .receipt-container .small-print { font-size: 8pt !important; line-height: 1.1 !important; } /* For footer box */
-
+             .receipt-container .signature-space { height: 5mm !important; } /* Reduced signature space height */
+             .receipt-container .small-print { font-size: 7pt !important; line-height: 1.1 !important; } /* Smaller footer box */
            }
            @media screen {
                .print-container {
-                   /* Adjust max-width for better screen viewing - make it wide enough */
-                   max-width: 1100px; /* F4 width approx */
+                   max-width: 1100px;
                    margin-left: auto;
                    margin-right: auto;
                }
-               /* Add styles for better screen preview */
                 .receipt-container {
-                     height: calc(215.9mm * 0.8); /* Simulate aspect ratio on screen */
-                     overflow-y: auto; /* Allow scrolling if content overflows */
+                     height: calc(215.9mm * 0.8); /* Simulate aspect ratio */
+                     overflow-y: auto;
                 }
            }
          `;
@@ -230,7 +230,7 @@ const CetakBuktiDUPageContent = () => {
            toast({ title: "Gagal Mempersiapkan Cetak", description: "Terjadi kesalahan saat menyiapkan halaman cetak.", variant: "destructive" });
            if (printWindow && !printWindow.closed) printWindow.close();
          }
-      }, 0);
+      }, 50); // Added small delay
    };
 
     if (loading) {
@@ -258,6 +258,7 @@ const CetakBuktiDUPageContent = () => {
          </div>
          {/* Apply max-width only for screen view, print styles override it */}
         <div ref={printRef} className="print-container flex-grow"> {/* Added flex-grow */}
+          {/* Pass the fetched data (including namaPetugas) to the print component */}
           <BuktiDaftarUlangPrint data={data} />
         </div>
       </div>

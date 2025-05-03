@@ -23,6 +23,7 @@ export interface BuktiDaftarUlangData {
   biayaDaftarUlang?: number | null; // From daftar ulang form
   tanggalDaftarUlang: string; // Format: YYYY-MM-DD or a Date object
   kabupatenTempat?: string | null; // For signature location
+  namaPetugas?: string | null; // Name of the logged-in staff/admin printing the receipt
 }
 
 // Helper component for rendering label-value pairs consistently
@@ -63,12 +64,13 @@ const formatCurrency = (value: number | null | undefined): string => {
 
 
 // Reusable Receipt Component
-const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean }> = ({ data, isArsip = false }) => {
+const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean; namaPetugas?: string | null }> = ({ data, isArsip = false, namaPetugas }) => {
      // Format tanggal daftar ulang if available
     const formattedTanggal = data.tanggalDaftarUlang
       ? format(new Date(data.tanggalDaftarUlang), 'dd MMMM yyyy', { locale: localeId })
       : '...................'; // Placeholder if date is missing
     const tempatDaftar = data.kabupatenTempat || 'Banyuputih'; // Use kabupaten or default
+    const petugasNamaDisplay = namaPetugas || 'Panitia PPDB'; // Use logged-in user's name or default
 
     return (
       // Adjusted padding, added max-w-none for print to take flex size
@@ -80,7 +82,7 @@ const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean }> = ({ 
                 <div className="w-8 h-8 bg-gray-200 flex items-center justify-center mr-1 rounded-full overflow-hidden flex-shrink-0 print:w-8 print:h-8 print:mr-1" data-ai-hint="school logo">
                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-green-700 print:w-5 print:h-5"> {/* Adjusted icon size */}
                         <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.522c0 .318.218.594.5.707A9.735 9.735 0 0 0 6 21a9.707 9.707 0 0 0 5.25-1.533v-1.42a.75.75 0 0 0-.657-.744A8.202 8.202 0 0 1 6 18a8.235 8.235 0 0 1-2.25-.37v-1.42a.75.75 0 0 1 .657-.744A8.21 8.21 0 0 0 6 15c2.086 0 3.981-.782 5.378-2.067a.75.75 0 0 0 1.122-.56v-1.42a.75.75 0 0 0-.5-.707 8.21 8.21 0 0 0-1.721-.486.75.75 0 0 0-.657.744v1.42h-.001c-1.431.925-3.312 1.483-5.323 1.483a8.235 8.235 0 0 1-2.25-.37V7.5a8.21 8.21 0 0 0 1.721-.486.75.75 0 0 1 .657.744v1.42c0 .274.11.523.294.706A8.21 8.21 0 0 0 6 10.5c2.086 0 3.981-.782 5.378-2.067a.75.75 0 0 1 1.122-.56v-1.42a.75.75 0 0 1 .5-.707c.157-.054.316-.1.477-.143a.75.75 0 0 0 .6-.89Z" />
-                        <path d="M12.75 3a9.735 9.735 0 0 1 3.25.555.75.75 0 0 1 .5.707v14.522c0 .318-.218.594-.5.707A9.735 9.735 0 0 1 12.75 21a9.707 9.707 0 0 1-5.25-1.533v-1.42a.75.75 0 0 1 .657-.744 8.202 8.202 0 0 0 4.593-.345 8.235 8.235 0 0 0 2.25-.37v-1.42a.75.75 0 0 0-.657-.744 8.21 8.21 0 0 1-4.593-.345c-2.086 0-3.981.782-5.378 2.067a.75.75 0 0 1-1.122.56v1.42a.75.75 0 0 1 .5.707 8.21 8.21 0 0 1 1.721.486.75.75 0 0 1 .657-.744v-1.42h.001c1.431-.925 3.312 1.483 5.323-1.483a8.235 8.235 0 0 0 2.25.37V13.5a8.21 8.21 0 0 1-1.721.486.75.75 0 0 0-.657.744v-1.42a.75.75 0 0 1-.294-.706 8.21 8.21 0 0 1-1.622-4.533c2.086 0 3.981.782 5.378 2.067a.75.75 0 0 0 1.122.56v1.42a.75.75 0 0 0 .5-.707c.157.054.316.1.477.143a.75.75 0 0 1 .6.89Z" />
+                        <path d="M12.75 3a9.735 9.735 0 0 1 3.25.555.75.75 0 0 1 .5.707v14.522c0 .318-.218.594-.5.707A9.735 9.735 0 0 1 12.75 21a9.707 9.707 0 0 1-5.25-1.533v-1.42a.75.75 0 0 1 .657-.744 8.202 8.202 0 0 0 4.593-.345 8.235 8.235 0 0 0 2.25-.37v-1.42a.75.75 0 0 0-.657-.744 8.21 8.21 0 0 1-4.593-.345c-2.086 0-3.981.782-5.378 2.067a.75.75 0 0 1-1.122.56v1.42a.75.75 0 0 1 .5.707 8.21 8.21 0 0 1 1.721.486.75.75 0 0 1 .657-.744v-1.42h.001c1.431-.925 3.312-1.483 5.323-1.483a8.235 8.235 0 0 0 2.25.37V13.5a8.21 8.21 0 0 1-1.721.486.75.75 0 0 0-.657.744v-1.42a.75.75 0 0 1-.294-.706 8.21 8.21 0 0 1-1.622-4.533c2.086 0 3.981.782 5.378 2.067a.75.75 0 0 0 1.122.56v1.42a.75.75 0 0 0 .5-.707c.157.054.316.1.477.143a.75.75 0 0 1 .6.89Z" />
                     </svg>
                 </div>
                 {/* Adjusted font sizes for better fit */}
@@ -145,7 +147,8 @@ const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean }> = ({ 
                 <p>{tempatDaftar}, {formattedTanggal}</p>
                 <p>Panitia PPDB</p>
                 <div className="h-5 print:h-4"></div> {/* Reduced space for signature */}
-                <p className="font-bold underline print:font-bold">( Saniyah, S.H. )</p>
+                 {/* Display the petugasNamaDisplay */}
+                <p className="font-bold underline print:font-bold">( {petugasNamaDisplay} )</p>
             </div>
         </div>
 
@@ -156,16 +159,17 @@ const Receipt: React.FC<{ data: BuktiDaftarUlangData; isArsip?: boolean }> = ({ 
 
 // Main Print Component combining two Receipts
 export const BuktiDaftarUlangPrint: React.FC<{ data: BuktiDaftarUlangData }> = ({ data }) => {
-   return (
-      // Use flex layout for side-by-side printing
-      <div className="print-container flex flex-col md:flex-row gap-4 print:flex-row print:gap-4">
-         {/* Copy 1: For Student */}
-         <Receipt data={data} />
+    // Pass the namaPetugas from data to both Receipt components
+    return (
+       // Use flex layout for side-by-side printing
+       <div className="print-container flex flex-col md:flex-row gap-4 print:flex-row print:gap-4">
+          {/* Copy 1: For Student */}
+          <Receipt data={data} namaPetugas={data.namaPetugas} />
 
-         {/* Separator is now handled by the container gap in print styles */}
+          {/* Separator is now handled by the container gap in print styles */}
 
-         {/* Copy 2: For Arsip */}
-         <Receipt data={data} isArsip={true} />
-      </div>
-   );
- };
+          {/* Copy 2: For Arsip */}
+          <Receipt data={data} isArsip={true} namaPetugas={data.namaPetugas} />
+       </div>
+    );
+  };
