@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -156,6 +155,7 @@ const CetakFormulirPageContent = () => {
     const [error, setError] = useState<string | null>(null);
     const printRef = useRef<HTMLDivElement>(null); // Ensure correct type
     const [isClient, setIsClient] = useState(false);
+    const { user, loading: authLoading } = useAuth(); // Get auth state
 
     useEffect(() => {
         setIsClient(true);
@@ -200,8 +200,12 @@ const CetakFormulirPageContent = () => {
             }
         };
 
-        fetchData();
-    }, [pendaftarId, isClient]);
+        // Fetch data only if authenticated (or if auth check is complete)
+        if (!authLoading) {
+             fetchData();
+        }
+
+    }, [pendaftarId, isClient, authLoading]); // Add authLoading to dependencies
 
    const handlePrint = () => {
      const printContent = printRef.current;
@@ -239,42 +243,47 @@ const CetakFormulirPageContent = () => {
              console.error("Error collecting styles:", e);
          }
 
+          // Updated Print Specific Styles for F4 and 1cm margin
           const printSpecificStyles = `
             @media print {
-              @page { size: A4; margin: 15mm; }
+              @page {
+                size: 215.9mm 330.2mm; /* F4 paper size (8.5 x 13 inches) */
+                margin: 1cm; /* 1cm margin on all sides */
+              }
               html, body {
                   margin: 0;
                   padding: 0;
                   font-family: 'Times New Roman', Times, serif;
-                  font-size: 10pt;
-                  line-height: 1.3; /* Adjusted line-height */
+                  font-size: 10pt; /* Base font size for print */
+                  line-height: 1.3; /* Adjust line-height */
                   -webkit-print-color-adjust: exact !important;
                   print-color-adjust: exact !important;
                   background-color: white !important;
               }
               .no-print { display: none !important; }
               .print-container {
-                   width: 100%;
+                   width: calc(100% - 0cm); /* Take full width within margins */
                    max-width: 100%;
-                   margin: 0;
+                   margin: 0 auto; /* Center content */
                    padding: 0;
                    border: none;
                    box-shadow: none;
                    break-inside: avoid;
                    background-color: white !important;
               }
-              /* Ensure no forced page breaks inside grid items */
               .grid > div { break-inside: avoid-page !important; }
-              /* Prevent widow/orphan lines in paragraphs/textareas */
               p, span, div, h1, h2, h3, h4, ul, li { orphans: 3; widows: 3; }
               img { max-width: 100%; height: auto; object-fit: contain; }
-              .data-row { margin-bottom: 2px !important; } /* Tighter spacing */
-              .data-row > span:first-child { width: 120px !important; } /* Adjust label width if needed */
-              .section-title { margin-top: 4px !important; margin-bottom: 2px !important; font-size: 11pt !important; }
-              .print-signature { margin-top: 40px !important; } /* More space for signatures */
+              .data-row { margin-bottom: 2px !important; line-height: 1.4 !important; } /* Tighter spacing, adjusted line-height */
+              .data-row > span:first-child { width: 110px !important; } /* Adjust label width */
+              .section-title { margin-top: 4px !important; margin-bottom: 2px !important; font-size: 11pt !important; line-height: 1.4 !important; }
+              .print-signature { margin-top: 30px !important; } /* Reduced space */
               .print-signature p { line-height: 1.4 !important; margin-bottom: 1px !important; }
-              .print-signature .underline { display: inline-block; min-width: 150px; }
-              .print-footer-section { margin-top: 10px !important; padding-top: 5px !important; border-top: 1px solid #ccc !important; }
+              .print-signature .underline { display: inline-block; min-width: 130px; }
+              .print-signature > div > div { height: 40px !important; } /* Reduce height */
+              .print-footer-section { margin-top: 10px !important; padding-top: 5px !important; border-top: 1px solid #aaa !important; }
+              .print-footer-section ul { list-style-type: none !important; padding-left: 0 !important; margin-left: 0 !important; }
+              .print-footer-section li { margin-bottom: 0 !important; }
             }
             @media screen {
                 body { background-color: #f3f4f6; }
@@ -291,11 +300,11 @@ const CetakFormulirPageContent = () => {
                     background-color: white;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                     padding: 1rem;
-                    width: 210mm; /* A4 width */
-                    min-height: 297mm; /* A4 height */
+                    width: 215.9mm; /* F4 width */
+                    /* min-height: 330.2mm; /* F4 height - removed to allow content flow */
                     border: 1px solid #ccc;
                     margin: 1rem auto;
-                     line-height: 1.5 !important;
+                    line-height: 1.5 !important;
                 }
                  .data-row { margin-bottom: 4px; }
                  .section-title { margin-top: 0.75rem; margin-bottom: 0.5rem; }
@@ -325,8 +334,6 @@ const CetakFormulirPageContent = () => {
                 try {
                    printWindow.focus();
                    printWindow.print();
-                   // Consider removing or adjusting the auto-close behavior
-                   // setTimeout(() => { if (!printWindow.closed) printWindow.close(); }, 2000);
                 } catch(e) {
                    console.error("Error during print execution:", e);
                     toast({ title: "Gagal Mencetak", description: "Terjadi kesalahan saat memulai proses cetak.", variant: "destructive" });
@@ -343,8 +350,15 @@ const CetakFormulirPageContent = () => {
    };
 
 
-    if (!isClient || loading) {
-      return <div className="flex justify-center items-center h-screen"><Loader2 className="mr-2 h-8 w-8 animate-spin" /><span>Memuat data formulir...</span></div>;
+    if (!isClient || authLoading || loading) {
+      return (
+         <div className="flex justify-center items-center h-screen">
+             <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+             <span>
+                 {authLoading ? 'Memeriksa autentikasi...' : 'Memuat data formulir...'}
+             </span>
+         </div>
+      );
     }
 
     if (error) {
@@ -362,7 +376,7 @@ const CetakFormulirPageContent = () => {
                  <ArrowLeft className="mr-2 h-4 w-4" /> Kembali
              </Button>
            <Button onClick={handlePrint} size="sm">
-             <Printer className="mr-2 h-4 w-4" /> Cetak Ulang Formulir (A4)
+             <Printer className="mr-2 h-4 w-4" /> Cetak Ulang Formulir (F4)
            </Button>
          </div>
         {/* Add print-preview-container for screen view styling */}
@@ -392,13 +406,13 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
         const isAdminPath = pathname?.startsWith('/admin');
         const isLoginPage = pathname === '/login';
+        const isPrintPage = pathname?.startsWith('/admin/cetak-'); // Check if it's a print page
 
-        if (!user && isAdminPath && !isLoginPage) {
-             console.log("AuthCheck (Cetak Formulir): User not authenticated, redirecting from", pathname);
+        if (!user && isAdminPath && !isLoginPage && !isPrintPage) { // Don't redirect from print pages
+             console.log("AuthCheck (Cetak Formulir): User not authenticated on protected admin page, redirecting from", pathname);
              const redirectUrl = `/login?redirect=${encodeURIComponent(pathname || '/')}`;
              router.push(redirectUrl);
          }
-         // No need to redirect logged-in user from print page
      }, [isClient, authLoading, user, router, pathname]);
 
 
@@ -411,13 +425,20 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         );
     }
 
-    // Allow rendering if user exists OR if loading is done (even if user is null, page itself might handle it)
-    if (user || !authLoading) {
+    // Allow rendering if user exists OR if loading is done OR if it's a print page
+    // This allows print pages to load even without a full user session,
+    // assuming data can be fetched via ID securely.
+    if (user || !authLoading || pathname?.startsWith('/admin/cetak-')) {
         return <>{children}</>;
     }
 
-    // Fallback if still loading somehow or condition not met
-    return null;
+    // Fallback if still loading somehow or condition not met on non-print admin pages
+     if (pathname?.startsWith('/admin') && !pathname?.startsWith('/login')) {
+        return null; // Or a redirect indicator if preferred
+     }
+
+     // For other paths (e.g., public form), render normally
+    return <>{children}</>;
 };
 
 
@@ -432,4 +453,4 @@ const CetakFormulirPage = () => {
 
 
 export default CetakFormulirPage;
-
+    

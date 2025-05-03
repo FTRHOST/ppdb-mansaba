@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -55,10 +54,10 @@ export interface FormulirData {
 // Helper component for rendering label-value pairs consistently
 const DataRow: React.FC<{ label: string; value?: string | null }> = ({ label, value }) => (
     value ? (
-     // Added print:mb-0.5 for tighter spacing in print
-     <div className="flex data-row print:mb-0.5">
+     // Adjusted print margins and widths
+     <div className="flex data-row print:mb-0 print:leading-tight">
        {/* Adjusted width for print */}
-       <span className="w-36 md:w-40 flex-shrink-0 print:w-[110px]">{label}</span>
+       <span className="w-36 md:w-40 flex-shrink-0 print:w-[100px]">{label}</span>
        <span className="mr-1 print:mr-1">:</span>
        <span className="font-semibold break-words">{value || '-'}</span>
      </div>
@@ -67,7 +66,8 @@ const DataRow: React.FC<{ label: string; value?: string | null }> = ({ label, va
 
 // Helper for multi-column rows
  const DataRowMultiCol: React.FC<{ items: { label: string; value?: string | null }[] }> = ({ items }) => (
-   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 print:grid-cols-2 print:gap-x-2">
+   // Use single column layout in print to avoid awkward wrapping
+   <div className="grid grid-cols-1 gap-x-4 mb-1 print:mb-0.5 print:grid-cols-1 print:gap-x-0">
      {items.map((item, index) => (
         <DataRow key={index} label={item.label} value={item.value} />
      ))}
@@ -76,8 +76,8 @@ const DataRow: React.FC<{ label: string; value?: string | null }> = ({ label, va
 
 // Helper for section titles
  const SectionTitle: React.FC<{ title: string }> = ({ title }) => (
-    // Added print:text-[11pt] print:py-0.5 print:my-1 for print styling
-    <h3 className="bg-green-700 text-white text-center font-bold py-1 my-2 text-sm print:text-[11pt] print:py-0.5 print:my-1 section-title">{title}</h3>
+    // Adjusted print styling
+    <h3 className="bg-primary text-primary-foreground text-center font-bold py-1 my-2 text-sm print:bg-green-700 print:text-white print:text-[10pt] print:py-0.5 print:my-1 section-title">{title}</h3>
  );
 
 
@@ -93,14 +93,14 @@ export const FormulirPendaftaranPrint: React.FC<{ data: FormulirData }> = ({ dat
        }
    }, []);
 
-   // Avoid rendering header on the server or before client mount if custom uri is used
+   // Render header based on client state and letterhead availability
    const renderHeader = () => {
-       // Always render something server-side or before client hydration to prevent mismatch
-       if (!isClient && !letterheadUri) {
-           return ( // Default text header for SSR/initial render
+       // Default text header for SSR/initial render to prevent hydration mismatch
+       if (!isClient) {
+           return (
               <div className="text-center py-2 mb-1 border-b-2 border-black pb-1">
                  <h1 className="text-sm font-bold">PANITIA PENDAFTARAN PESERTA DIDIK BARU</h1>
-                 <h2 className="text-lg font-bold text-green-700">MA NU 01 BANYUPUTIH</h2>
+                 <h2 className="text-lg font-bold text-primary">MA NU 01 BANYUPUTIH</h2>
                  <h3 className="text-sm font-bold">TAHUN PELAJARAN 2025/2026</h3>
                  <p className="text-xs">Jl. Lapangan 9a Banyuputih Kec. Banyuputih Kab. Batang</p>
               </div>
@@ -113,7 +113,7 @@ export const FormulirPendaftaranPrint: React.FC<{ data: FormulirData }> = ({ dat
                  <Image
                     src={letterheadUri}
                     alt="Kop Surat MA NU 01 Banyuputih"
-                    width={794} // Approx A4 width in pixels for reference
+                    width={794} // Approx F4 width in pixels for reference
                     height={150} // Adjust height as needed
                     className="w-full h-auto object-contain"
                     priority
@@ -125,7 +125,7 @@ export const FormulirPendaftaranPrint: React.FC<{ data: FormulirData }> = ({ dat
        return (
            <div className="text-center mb-1 border-b-2 border-black pb-1">
                 <h1 className="text-sm font-bold">PANITIA PENDAFTARAN PESERTA DIDIK BARU</h1>
-                <h2 className="text-lg font-bold text-green-700">MA NU 01 BANYUPUTIH</h2>
+                <h2 className="text-lg font-bold text-primary">MA NU 01 BANYUPUTIH</h2>
                 <h3 className="text-sm font-bold">TAHUN PELAJARAN 2025/2026</h3>
                 <p className="text-xs">Jl. Lapangan 9a Banyuputih Kec. Banyuputih Kab. Batang</p>
            </div>
@@ -138,32 +138,25 @@ export const FormulirPendaftaranPrint: React.FC<{ data: FormulirData }> = ({ dat
    const tempatDaftar = data.kabupaten || 'Banyuputih';
 
    return (
-     // Removed max-w-4xl, using A4 size in print CSS instead
-     <div className="bg-white p-4 mx-auto border border-gray-300 text-xs font-['Times_New_Roman'] print:font-['Times_New_Roman'] print:text-[10pt] print:leading-tight print:border-none print:shadow-none print:p-0">
+     <div className="formulir-print-container bg-white p-4 mx-auto border border-gray-300 text-xs font-['Times_New_Roman'] print:font-['Times_New_Roman'] print:text-[10pt] print:leading-normal print:border-none print:shadow-none print:p-0">
        {renderHeader()}
         <h3 className="font-bold text-center mb-1 underline text-sm print:text-[12pt] print:mb-1">FORMULIR PENDAFTARAN PESERTA DIDIK BARU</h3>
 
        {/* Sections */}
        <SectionTitle title="IDENTITAS PESERTA DIDIK" />
-       {/* Adjusted grid for better print layout */}
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 mb-1 print:mb-0.5 print:grid-cols-2 print:gap-x-2">
+       {/* Adjusted grid for better print layout - stacking in print */}
+       <div className="grid grid-cols-1 gap-x-4 mb-1 print:mb-0.5 print:grid-cols-1 print:gap-x-0">
          <DataRow label="No Pendaftaran" value={data.nomorPendaftaran} />
          <DataRow label="Jalur Daftar" value={data.jalurPendaftaran} />
          <DataRow label="NISN" value={data.nisn} />
          <DataRow label="Peminatan" value={data.programPeminatan} />
+         <DataRow label="Nama Peserta Didik" value={data.nama?.toUpperCase()} />
+         <DataRow label="Tempat & Tgl Lahir" value={data.tempatTanggalLahir} />
+         <DataRow label="Jenis Kelamin" value={data.jenisKelamin} />
+         <DataRow label="No. HP" value={data.noHp} />
+         <DataRow label="Keterangan Tinggal" value={data.tinggal} />
+         <DataRow label="Alamat Tinggal" value={data.alamatLengkap}/>
        </div>
-       <div className="mb-1 print:mb-0.5">
-          <DataRow label="Nama Peserta Didik" value={data.nama?.toUpperCase()} />
-       </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 mb-1 print:mb-0.5 print:grid-cols-2 print:gap-x-2">
-            <DataRow label="Tempat & Tgl Lahir" value={data.tempatTanggalLahir} />
-            <DataRow label="Jenis Kelamin" value={data.jenisKelamin} />
-            <DataRow label="No. HP" value={data.noHp} />
-            <DataRow label="Keterangan Tinggal" value={data.tinggal} />
-        </div>
-         <div className="mb-1 print:mb-0.5">
-              <DataRow label="Alamat Tinggal" value={data.alamatLengkap}/>
-         </div>
 
        <SectionTitle title="IDENTITAS ORANGTUA / WALI" />
        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 mb-1 print:mb-0.5 print:grid-cols-2 print:gap-x-2">
@@ -189,11 +182,13 @@ export const FormulirPendaftaranPrint: React.FC<{ data: FormulirData }> = ({ dat
          {data.tinggal === 'Bersama Wali' && data.namaWali && ( // Conditionally render Wali section
              <div className="mt-1 pt-1 border-t border-gray-300 print:mt-0.5 print:pt-0.5">
                  <h4 className="font-bold mb-0.5 underline print:mb-0.5">Wali</h4>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 print:grid-cols-2 print:gap-x-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 print:grid-cols-2 print:gap-x-2">
                      <DataRow label="Nama" value={data.namaWali?.toUpperCase()} />
                      <DataRow label="Hubungan" value={data.hubunganWali} />
                      <DataRow label="Alamat" value={data.alamatWali?.toUpperCase()} />
                      <DataRow label="No. HP" value={data.noHpWali} />
+                     <DataRow label="Pendidikan" value={data.pendidikanWali} />
+                     <DataRow label="Pekerjaan" value={data.pekerjaanWali} />
                  </div>
              </div>
          )}
@@ -221,42 +216,41 @@ export const FormulirPendaftaranPrint: React.FC<{ data: FormulirData }> = ({ dat
           <div>
             <p>Mengetahui,</p>
             <p>Panitia PPDB</p>
-            <div className="h-10 print:h-[60px]"></div> {/* Adjusted height */}
-            <p className="font-bold underline">( Saniyah, S.H. )</p>
+            <div className="h-10 print:h-[40px]"></div> {/* Adjusted height */}
+            <p className="font-bold underline print:font-bold">( Saniyah, S.H. )</p>
           </div>
           <div>
             <p>Orang Tua / Wali</p>
-            <div className="h-10 print:h-[60px]"></div> {/* Adjusted height */}
-            <p className="font-bold underline">( {data.tinggal === 'Bersama Wali' ? data.namaWali?.toUpperCase() : data.namaAyah?.toUpperCase() || data.namaIbu?.toUpperCase() || '...........................'} )</p>
+            <div className="h-10 print:h-[40px]"></div> {/* Adjusted height */}
+            <p className="font-bold underline print:font-bold">( {data.tinggal === 'Bersama Wali' ? data.namaWali?.toUpperCase() : data.namaAyah?.toUpperCase() || data.namaIbu?.toUpperCase() || '...........................'} )</p>
           </div>
           <div>
             <p>{tempatDaftar}, {formattedTanggalDaftar}</p>
             <p>Pendaftar</p>
-            <div className="h-10 print:h-[60px]"></div> {/* Adjusted height */}
-            <p className="font-bold underline">( {data.nama?.toUpperCase() || '...........................'} )</p>
+            <div className="h-10 print:h-[40px]"></div> {/* Adjusted height */}
+            <p className="font-bold underline print:font-bold">( {data.nama?.toUpperCase() || '...........................'} )</p>
           </div>
         </div>
 
        {/* Bukti Daftar Section (Footer) */}
         <div className="print-footer-section mt-2 pt-1 border-t-2 border-black print:mt-3 print:pt-1">
              <h3 className="font-bold text-center mb-1 text-sm print:text-[11pt]">BUKTI DAFTAR</h3>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 mb-1 print:grid-cols-2 print:gap-x-2 print:mb-0.5">
+             <div className="grid grid-cols-1 gap-x-4 mb-1 print:grid-cols-1 print:gap-x-0 print:mb-0.5">
                  <DataRow label="No. Pendaftaran" value={data.nomorPendaftaran} />
                  <DataRow label="Jalur" value={data.jalurPendaftaran} />
                  <DataRow label="Nama" value={data.nama?.toUpperCase()} />
                  <DataRow label="Peminatan" value={data.programPeminatan} />
                  <DataRow label="Alamat" value={data.alamatLengkap} />
-                 <div></div> {/* Spacer */}
                  <DataRow label="Asal Sekolah" value={data.namaSekolahAsal?.toUpperCase()} />
              </div>
              <div className="mt-1 text-xs print:mt-0.5 print:text-[9pt]">
                 <p className="font-medium">Dimohon untuk segera melakukan daftar ulang dengan mengumpulkan :</p>
-                <ul className="list-disc list-inside ml-4">
-                   <li>KK (Asli)</li>
-                   <li>Surat Kelulusan (jika sudah ada)</li>
-                   <li>Fotocopi KK dan Akte Lahir</li>
-                   <li>Membayar biaya Daftar Ulang</li>
-                   <li>SKTM dan Rekomendasi PR NU Desa (Jika ada)</li>
+                <ul className="list-disc list-inside ml-4 print:list-none print:ml-0">
+                   <li>- KK (Asli)</li>
+                   <li>- Surat Kelulusan (jika sudah ada)</li>
+                   <li>- Fotocopi KK dan Akte Lahir</li>
+                   <li>- Membayar biaya Daftar Ulang</li>
+                   <li>- SKTM dan Rekomendasi PR NU Desa (Jika ada)</li>
                 </ul>
              </div>
              <div className="grid grid-cols-2 gap-2 mt-2 text-center text-xs print:mt-4 print:text-[9pt]">
@@ -264,8 +258,8 @@ export const FormulirPendaftaranPrint: React.FC<{ data: FormulirData }> = ({ dat
                   <div>
                       <p>{tempatDaftar}, {formattedTanggalDaftar}</p>
                       <p>Panitia,</p>
-                      <div className="h-8 print:h-[50px]"></div> {/* Adjusted height */}
-                      <p className="font-bold underline">( Saniyah, S.H. )</p>
+                      <div className="h-8 print:h-[30px]"></div> {/* Adjusted height */}
+                      <p className="font-bold underline print:font-bold">( Saniyah, S.H. )</p>
                   </div>
              </div>
         </div>
