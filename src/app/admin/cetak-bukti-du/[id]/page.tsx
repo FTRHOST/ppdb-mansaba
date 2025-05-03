@@ -156,7 +156,7 @@ const CetakBuktiDUPageContent = () => {
              console.log('Collected styles for print window.');
          } catch (e) { console.error("Error collecting styles:", e); }
 
-         // Define F4 Landscape size in mm (approx 216mm x 330mm)
+         // Define F4 Landscape size in mm (approx 330mm x 216mm)
          // Adjust margins, paddings, font sizes for better F4 fit and proportion
          const printSpecificStyles = `
            @media print {
@@ -164,40 +164,46 @@ const CetakBuktiDUPageContent = () => {
                size: 330mm 216mm; /* F4 Landscape approx 13 x 8.5 inches */
                margin: 10mm 8mm 5mm 8mm; /* top, right, bottom, left - Adjusted horizontal margins */
              }
-             html, body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 9pt; line-height: 1.1; -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 100%; height: auto; }
+             html, body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 9pt; line-height: 1.2; -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 100%; height: auto; }
              .no-print { display: none !important; }
-             .print-container { display: flex !important; justify-content: space-between !important; align-items: flex-start !important; gap: 10mm !important; width: 100% !important; height: auto !important; padding: 0 !important; border: none !important; box-shadow: none !important; }
-             /* Reduce max-width further to make receipts less wide */
-             .receipt-container { flex: 1 !important; max-width: calc(50% - 8mm) !important; /* Reduced width, increased space between */ border: 1px solid black !important; padding: 4mm 4mm 3mm 4mm !important; /* T R B L */ box-sizing: border-box !important; height: 100% !important; /* Let height be determined by content */ overflow: hidden !important; break-inside: avoid !important; font-size: 9pt !important; line-height: 1.1 !important; }
-             .receipt-container h1, .receipt-container h2, .receipt-container h3 { margin-bottom: 1mm; line-height: 1.1; }
+             /* Make the container take full width and height */
+             .print-container { display: flex !important; justify-content: space-between !important; align-items: stretch !important; gap: 10mm !important; width: 100% !important; height: calc(100vh - 15mm) !important; /* Adjust height based on margins */ padding: 0 !important; border: none !important; box-shadow: none !important; }
+             /* Adjust receipt container for proportion: Less wide, potentially taller */
+             .receipt-container { flex: 1 !important; max-width: calc(50% - 6mm) !important; /* Reduce width slightly, adjust gap in container */ border: 1px solid black !important; padding: 4mm 4mm 4mm 4mm !important; /* Slightly more vertical padding */ box-sizing: border-box !important; height: 100% !important; /* Take full height of flex item */ display: flex; flex-direction: column; /* Allow content to push footer down */ overflow: hidden !important; break-inside: avoid !important; font-size: 9pt !important; line-height: 1.2 !important; }
+             .receipt-content { flex-grow: 1; } /* Make main content area grow */
+             .receipt-footer { margin-top: auto; } /* Push footer elements to bottom */
+
+             .receipt-container h1, .receipt-container h2, .receipt-container h3 { margin-bottom: 1.5mm; line-height: 1.2; } /* Slightly more space */
              /* Specific text size adjustments */
-             .receipt-container .text-xs { font-size: 9pt !important; line-height: 1.1 !important; }
-             .receipt-container .text-sm { font-size: 10pt !important; line-height: 1.1 !important; }
-             .receipt-container .text-base { font-size: 11pt !important; line-height: 1.1 !important; }
+             .receipt-container .text-xs { font-size: 9pt !important; line-height: 1.2 !important; }
+             .receipt-container .text-sm { font-size: 10pt !important; line-height: 1.2 !important; }
+             .receipt-container .text-base { font-size: 11pt !important; line-height: 1.2 !important; }
              .receipt-container .font-bold { font-weight: bold !important; }
              .receipt-container .font-semibold { font-weight: 600 !important; }
              .receipt-container .font-medium { font-weight: 500 !important; }
-             .receipt-container .mb-0_5 { margin-bottom: 0.7mm !important; } /* Tighter margin */
-             .receipt-container .mb-1 { margin-bottom: 1.0mm !important; }
-             .receipt-container .mt-1 { margin-top: 1.0mm !important; }
-             .receipt-container .my-1 { margin-top: 1.0mm !important; margin-bottom: 1.0mm !important; }
-             .receipt-container .pb-0_5 { padding-bottom: 0.7mm !important; }
-             .receipt-container .mr-1 { margin-right: 1.0mm !important; }
-             .receipt-container .ml-1 { margin-left: 1.0mm !important; }
-             .receipt-container .ml-2 { margin-left: 2.0mm !important; }
+             .receipt-container .mb-0_5 { margin-bottom: 0.8mm !important; } /* Slightly more margin */
+             .receipt-container .mb-1 { margin-bottom: 1.2mm !important; }
+             .receipt-container .mt-1 { margin-top: 1.2mm !important; }
+             .receipt-container .mt-2 { margin-top: 2.4mm !important; }
+             .receipt-container .my-1 { margin-top: 1.2mm !important; margin-bottom: 1.2mm !important; }
+             .receipt-container .pb-0_5 { padding-bottom: 0.8mm !important; }
+             .receipt-container .pb-1 { padding-bottom: 1.2mm !important; }
+             .receipt-container .mr-1 { margin-right: 1.2mm !important; }
+             .receipt-container .ml-1 { margin-left: 1.2mm !important; }
+             .receipt-container .ml-2 { margin-left: 2.4mm !important; }
              /* Icon/element size adjustments */
-             .receipt-container .w-8 { width: 20pt !important; height: 20pt !important; }
-             .receipt-container .h-8 { height: 20pt !important; }
-             .receipt-container .w-5 { width: 12pt !important; height: 12pt !important; }
-             .receipt-container .h-5 { height: 12pt !important; }
-             .receipt-container .w-3 { width: 8pt !important; height: 8pt !important; } /* Smaller checklist icon */
-             .receipt-container .h-3 { height: 8pt !important; }
-             .receipt-container .w-\\[70px\\] { width: 65px !important; } /* Slightly narrower label */
-             .receipt-container .text-\\[9px\\] { font-size: 7pt !important; } /* Smaller header text */
+             .receipt-container .w-10 { width: 24pt !important; height: 24pt !important; } /* Slightly larger logo */
+             .receipt-container .h-10 { height: 24pt !important; }
+             .receipt-container .w-6 { width: 14pt !important; height: 14pt !important; } /* Larger logo icon */
+             .receipt-container .h-6 { height: 14pt !important; }
+             .receipt-container .w-3 { width: 9pt !important; height: 9pt !important; } /* Checklist icon size */
+             .receipt-container .h-3 { height: 9pt !important; }
+             .receipt-container .w-\\[80px\\] { width: 80px !important; } /* Keep label width consistent */
+             .receipt-container .text-\\[10pt\\] { font-size: 10pt !important; } /* Smaller header text if needed */
+             .receipt-container .text-\\[9pt\\] { font-size: 9pt !important; }
              .receipt-container .text-\\[8pt\\] { font-size: 8pt !important; }
-             .receipt-container .text-\\[7pt\\] { font-size: 6.5pt !important; } /* Smaller footer box text */
-             .receipt-container .signature-space { height: 4mm !important; } /* Reduced signature space */
-             .receipt-container .small-print { font-size: 6.5pt !important; line-height: 1.0 !important; } /* Smaller footer box */
+             .receipt-container .small-print { font-size: 7pt !important; line-height: 1.1 !important; } /* Footer box text */
+             .receipt-container .signature-space { height: 6mm !important; } /* Increase signature space */
            }
            @media screen {
                .print-container {
@@ -208,9 +214,9 @@ const CetakBuktiDUPageContent = () => {
                }
                 .receipt-container {
                     /* Simulate aspect ratio for screen view, adjust height */
-                     height: calc(216mm * 0.9); /* Adjust multiplier as needed */
+                     height: calc(216mm * 0.95); /* Slightly taller simulation */
                      overflow-y: auto;
-                     max-width: 500px; /* Limit width on screen */
+                     max-width: 480px; /* Slightly narrower on screen */
                      margin-bottom: 1rem; /* Add spacing on screen */
                 }
            }
@@ -251,7 +257,7 @@ const CetakBuktiDUPageContent = () => {
    };
 
     // Use authLoading state for the initial loading indicator
-    if (authLoading || (loading && !error)) {
+    if (authLoading || (loading && !error && !user)) { // Check user presence as well
       return (
           <div className="flex justify-center items-center h-screen">
               <Loader2 className="mr-2 h-8 w-8 animate-spin" />
@@ -305,10 +311,10 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
      }, []);
 
     useEffect(() => {
-         if (!isClient) return; // Don't run on server
+         if (!isClient || authLoading) return; // Don't run on server or while loading
 
-        // Only redirect if not already on login page and auth check is complete
-        if (!authLoading && !user && pathname !== '/login') {
+        // Only redirect if not already on login page and auth check is complete and user is null
+        if (!user && pathname !== '/login') {
             console.log("AuthCheck: Not authenticated, redirecting to login.");
             // Store the intended redirect path *before* navigating
             const redirectPath = window.location.pathname + window.location.search;
@@ -350,3 +356,4 @@ const CetakBuktiDUPage = () => {
 };
 
 export default CetakBuktiDUPage;
+
