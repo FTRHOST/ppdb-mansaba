@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -132,6 +133,7 @@ const CetakBuktiDUPageContent = () => {
              styles = Array.from(document.styleSheets)
                .map(styleSheet => {
                  try {
+                   // Only include internal/inline styles or those from the same origin
                    if (!styleSheet.href || styleSheet.href.startsWith(window.location.origin) || styleSheet.href.startsWith('/')) {
                      return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('');
                    } return '';
@@ -140,13 +142,14 @@ const CetakBuktiDUPageContent = () => {
              console.log('Collected styles for print window.');
          } catch (e) { console.error("Error collecting styles:", e); }
 
+         // Define F4 Landscape size in mm (8.5 x 13 inches approx 215.9mm x 330.2mm)
          const printSpecificStyles = `
            @media print {
-             @page { size: 215.9mm 330.2mm landscape; margin: 10mm; }
-             body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 9pt; line-height: 1.15; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+             @page { size: 330.2mm 215.9mm; margin: 10mm; } /* F4 Landscape */
+             html, body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 9pt; line-height: 1.15; -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 100%; height: 100%; }
              .no-print { display: none !important; }
-             .print-container { display: flex !important; justify-content: space-between !important; align-items: flex-start !important; gap: 10mm !important; width: 100% !important; padding: 0 !important; border: none !important; box-shadow: none !important; page-break-inside: avoid !important; }
-             .receipt-container { flex: 1 !important; max-width: calc(50% - 5mm) !important; border: 1px solid black !important; padding: 4mm !important; box-sizing: border-box !important; height: auto !important; overflow: hidden !important; break-inside: avoid !important; font-size: 8pt !important; line-height: 1.1 !important; }
+             .print-container { display: flex !important; justify-content: space-between !important; align-items: flex-start !important; gap: 10mm !important; width: 100% !important; height: 100% !important; padding: 0 !important; border: none !important; box-shadow: none !important; }
+             .receipt-container { flex: 1 !important; max-width: calc(50% - 5mm) !important; border: 1px solid black !important; padding: 4mm !important; box-sizing: border-box !important; height: 100% !important; overflow: hidden !important; break-inside: avoid !important; font-size: 8pt !important; line-height: 1.1 !important; }
              .receipt-container h1, .receipt-container h2, .receipt-container h3 { margin-bottom: 1mm; line-height: 1.1; }
              .receipt-container .text-xs { font-size: 8pt !important; line-height: 1.1 !important; }
              .receipt-container .text-sm { font-size: 9pt !important; line-height: 1.1 !important; }
@@ -159,7 +162,7 @@ const CetakBuktiDUPageContent = () => {
              .receipt-container .mt-1 { margin-top: 1mm !important; }
              .receipt-container .my-1 { margin-top: 1mm !important; margin-bottom: 1mm !important; }
              .receipt-container .p-1 { padding: 1mm !important; }
-             .receipt-container .p-2 { padding: 4mm !important; }
+             .receipt-container .p-2 { padding: 4mm !important; } /* Use the container's padding */
              .receipt-container .pb-0_5 { padding-bottom: 0.5mm !important; }
              .receipt-container .mr-1 { margin-right: 1mm !important; }
              .receipt-container .ml-1 { margin-left: 1mm !important; }
@@ -176,6 +179,14 @@ const CetakBuktiDUPageContent = () => {
              .receipt-container .text-\\[7pt\\] { font-size: 7pt !important; }
              .receipt-container .h-5 { height: 10pt !important; } /* Reduced signature space */
            }
+           @media screen {
+               .print-container {
+                   /* Adjust max-width for better screen viewing */
+                   max-width: 1100px; /* Example: Limit width on screen */
+                   margin-left: auto;
+                   margin-right: auto;
+               }
+           }
          `;
 
          try {
@@ -183,13 +194,13 @@ const CetakBuktiDUPageContent = () => {
            const printDoc = printWindow.document;
 
            printDoc.open();
-           printDoc.write(`<html><head><title>Bukti Daftar Ulang - ${data?.namaPendaftar || daftarUlangId}</title><style>${styles}${printSpecificStyles}</style></head><body><div class="print-container">${printContent.innerHTML}</div></body></html>`);
+           printDoc.write(`<!DOCTYPE html><html><head><title>Bukti Daftar Ulang - ${data?.namaPendaftar || daftarUlangId}</title><style>${styles}${printSpecificStyles}</style></head><body><div class="print-container">${printContent.innerHTML}</div></body></html>`);
            printDoc.close();
 
            setTimeout(() => {
              try {
                console.log('Executing print command.');
-               printWindow.focus();
+               printWindow.focus(); // Focus the window before printing
                printWindow.print();
                console.log('Print command executed.');
              } catch (printError) {
@@ -200,7 +211,7 @@ const CetakBuktiDUPageContent = () => {
                  console.log('Restoring original document title.');
                  document.title = originalTitle;
              }
-           }, 500);
+           }, 500); // Delay to allow content rendering
 
          } catch (writeError) {
            console.error("Error writing to print window:", writeError);
@@ -224,7 +235,7 @@ const CetakBuktiDUPageContent = () => {
 
     return (
       <div className="bg-gray-100 p-4 print:bg-white print:p-0">
-         <div className="mb-4 flex justify-between items-center no-print">
+         <div className="mb-4 flex justify-between items-center no-print max-w-5xl mx-auto"> {/* Added max-w and mx-auto */}
              <Button variant="outline" size="sm" onClick={() => router.back()}>
                  <ArrowLeft className="mr-2 h-4 w-4" /> Kembali
              </Button>
@@ -232,7 +243,8 @@ const CetakBuktiDUPageContent = () => {
                  <Printer className="mr-2 h-4 w-4" /> Cetak Bukti (F4 Landscape)
              </Button>
          </div>
-        <div ref={printRef} className="max-w-[95%] mx-auto lg:max-w-5xl print:max-w-full">
+         {/* Apply max-width only for screen view, print styles override it */}
+        <div ref={printRef} className="print-container">
           <BuktiDaftarUlangPrint data={data} />
         </div>
       </div>
@@ -243,13 +255,15 @@ const CetakBuktiDUPageContent = () => {
 const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
-        if (!authLoading && !user) {
+        // Only redirect if not already on login page and auth check is complete
+        if (!authLoading && !user && pathname !== '/login') {
             console.log("AuthCheck: Not authenticated, redirecting to login.");
             router.push('/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
         }
-    }, [authLoading, user, router]);
+    }, [authLoading, user, router, pathname]);
 
     if (authLoading) {
         return (
@@ -260,14 +274,16 @@ const AuthCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         );
     }
 
+    // If not logged in and not loading, show minimal content while redirect happens
     if (!user) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <p>Mengarahkan ke halaman login...</p>
-            </div>
-        );
+         return (
+             <div className="flex justify-center items-center h-screen">
+                 <p>Mengarahkan ke halaman login...</p>
+             </div>
+         );
     }
 
+    // If authenticated and not loading, render the page content
     return <>{children}</>;
 };
 
@@ -282,3 +298,6 @@ const CetakBuktiDUPage = () => {
 };
 
 export default CetakBuktiDUPage;
+
+
+    
