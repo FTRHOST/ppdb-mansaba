@@ -156,9 +156,15 @@ const CetakFormulirPageContent = () => {
     const printRef = useRef<HTMLDivElement>(null); // Ensure correct type
     const [isClient, setIsClient] = useState(false);
     const { user, loading: authLoading } = useAuth(); // Get auth state
+    const [letterheadUri, setLetterheadUri] = useState<string | null>(null); // State for letterhead
 
     useEffect(() => {
         setIsClient(true);
+        // Load letterhead from localStorage on client-side mount
+        const storedUri = localStorage.getItem('customLetterheadUri');
+        if (storedUri) {
+            setLetterheadUri(storedUri);
+        }
     }, []);
 
     useEffect(() => {
@@ -261,7 +267,7 @@ const CetakFormulirPageContent = () => {
                   background-color: white !important;
               }
               .no-print { display: none !important; }
-              .print-container {
+              .formulir-print-container {
                    width: calc(100% - 0cm); /* Take full width within margins */
                    max-width: 100%;
                    margin: 0 auto; /* Center content */
@@ -296,7 +302,7 @@ const CetakFormulirPageContent = () => {
                     overflow-x: auto;
                     min-height: 100vh;
                 }
-                .print-container {
+                .formulir-print-container {
                     background-color: white;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                     padding: 1rem;
@@ -323,7 +329,8 @@ const CetakFormulirPageContent = () => {
             printWindow.document.write(printSpecificStyles); // Print-specific overrides
             printWindow.document.write('</style>');
             printWindow.document.write('</head><body>');
-            printWindow.document.write('<div class="print-container">');
+            // Changed class from print-container to formulir-print-container
+            printWindow.document.write('<div class="formulir-print-container">');
             printWindow.document.write(printContent.innerHTML);
             printWindow.document.write('</div>');
             printWindow.document.write('</body></html>');
@@ -381,7 +388,7 @@ const CetakFormulirPageContent = () => {
          </div>
         {/* Add print-preview-container for screen view styling */}
         <div className="print-preview-container">
-            <div ref={printRef} className="print-container">
+            <div ref={printRef} className="formulir-print-container">
                 {/* The actual print content component */}
                 <FormulirPendaftaranPrint data={data} />
             </div>
@@ -453,4 +460,3 @@ const CetakFormulirPage = () => {
 
 
 export default CetakFormulirPage;
-    
