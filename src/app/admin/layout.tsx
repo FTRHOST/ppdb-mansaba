@@ -23,12 +23,18 @@ import { Button } from '@/components/ui/button';
 import { LogOut, LayoutDashboard, Users, UserPlus, ListChecks, FileText, Settings, Edit, FileInput, BarChart3, BookUser, BriefcaseBusiness, School, UserCog } from 'lucide-react'; // Added UserCog
 import { cn } from '@/lib/utils';
 import { useAuth } from '../../hooks/use-auth'; // Import the hook using relative path
-import { useEffect } from 'react'; // Import useEffect
+import { useEffect, useState } from 'react'; // Import useEffect and useState
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const router = useRouter();
   const { user, loading, logout, requireAuth } = useAuth(); // Use the auth hook
+  const [isClient, setIsClient] = useState(false); // State to track client-side mount
+
+  useEffect(() => {
+    setIsClient(true); // Set to true after component mounts
+    requireAuth();
+  }, [requireAuth]); // Depend on the stable requireAuth function
 
   const isActive = (path: string) => pathname === path;
 
@@ -39,13 +45,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       // Redirect is handled within the logout function in useAuth hook
   };
 
-  // Redirect to login if not authenticated and not loading
-   useEffect(() => {
-        requireAuth();
-    }, [requireAuth]); // Depend on the stable requireAuth function
-
-  // Show loading state or prevent rendering children if not authenticated
-  if (loading || !user) {
+  // Show loading state or prevent rendering children if not authenticated *after* client mount
+  if (!isClient || loading || !user) {
      return (
         <div className="flex h-screen items-center justify-center">
           <p>Memuat autentikasi...</p> {/* Or a spinner component */}
