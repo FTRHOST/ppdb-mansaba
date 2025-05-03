@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react'; // Import useRef, useState, useEffect
+import React, { useRef, useState, useEffect } from 'react'; // Explicitly import React
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';

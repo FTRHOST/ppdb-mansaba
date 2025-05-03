@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react'; // Explicitly import React
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type FieldPath } from 'react-hook-form';
 import { z } from 'zod';
@@ -25,12 +26,12 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-// import { Calendar } from '@/components/ui/calendar'; // No longer needed
-// import {
-//   Popover,
-//   PopoverContent,
-//   PopoverTrigger,
-// } from '@/components/ui/popover'; // No longer needed
+import { Calendar } from '@/components/ui/calendar'; // Import Calendar
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'; // Import Popover
 import { Progress } from "@/components/ui/progress";
 import { CalendarIcon, User, Home, Users, Building, PenSquare, GraduationCap, Info, MapPin, UserCheck, BookOpen, Lightbulb, FileText, HeartHandshake, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { format, parse } from 'date-fns';
@@ -66,10 +67,7 @@ const formSchema = z.object({
   nama: z.string().min(1, { message: 'Nama lengkap harus diisi.' }),
   jenisKelamin: z.enum(['Laki-laki', 'Perempuan'], { required_error: 'Jenis kelamin harus dipilih.' }),
   tempatLahir: z.string().min(1, { message: 'Tempat lahir harus diisi.' }),
-  // Change tanggalLahir to string and add refinement for dd/MM/yyyy format
-  tanggalLahir: z.string()
-    .min(1, { message: 'Tanggal lahir harus diisi.' })
-    .refine(isValidDateString, { message: 'Format tanggal lahir tidak valid (DD/MM/YYYY).' }),
+  tanggalLahir: z.date({ required_error: 'Tanggal lahir harus dipilih.' }), // Use date object
   noHp: z.string().min(10, { message: 'Nomor HP/Whatsapp minimal 10 digit.' }).regex(/^\d+$/, { message: 'Nomor HP/Whatsapp hanya boleh berisi angka.' }),
   tinggal: z.enum(['Bersama Orang tua', 'Bersama Wali', 'Bersama Kakak', 'Tinggal Sendiri', 'Lainnya'], { required_error: 'Pilihan tinggal harus dipilih.' }),
   dukuhJalan: z.string().min(1, { message: 'Dukuh/Jalan harus diisi.' }),
@@ -144,7 +142,7 @@ const FormPendaftaranClient = () => {
             nama: '',
             jenisKelamin: undefined,
             tempatLahir: '',
-            tanggalLahir: '', // Default to empty string for Input
+            tanggalLahir: undefined, // Default date to undefined
             noHp: '',
             tinggal: undefined,
             dukuhJalan: '',
@@ -181,7 +179,7 @@ const FormPendaftaranClient = () => {
 
     // Watch form fields to update derived values
     const watchedTempatLahir = form.watch('tempatLahir');
-    const watchedTanggalLahir = form.watch('tanggalLahir');
+    const watchedTanggalLahir = form.watch('tanggalLahir'); // Watch the Date object
     const watchedDukuhJalan = form.watch('dukuhJalan');
     const watchedDesa = form.watch('desa');
     const watchedRt = form.watch('rt');
@@ -199,15 +197,13 @@ const FormPendaftaranClient = () => {
     // Effect for Tempat, Tanggal Lahir - runs only on client after mount
     useEffect(() => {
         if (!mounted) return; // Don't run before mount
-        if (watchedTempatLahir && watchedTanggalLahir && isValidDateString(watchedTanggalLahir)) {
+        if (watchedTempatLahir && watchedTanggalLahir instanceof Date) { // Check if it's a Date object
             try {
-                // Parse the DD/MM/YYYY string and format it
-                const parsedDate = parse(watchedTanggalLahir, 'dd/MM/yyyy', new Date());
-                const formattedDate = format(parsedDate, 'dd MMMM yyyy', { locale: localeId });
+                const formattedDate = format(watchedTanggalLahir, 'dd MMMM yyyy', { locale: localeId });
                 setTempatTanggalLahir(`${watchedTempatLahir}, ${formattedDate}`);
             } catch (error) {
-                console.error("Error parsing/formatting date string:", error);
-                setTempatTanggalLahir(`${watchedTempatLahir}, ${watchedTanggalLahir}`); // Fallback to raw string
+                console.error("Error formatting date object:", error);
+                setTempatTanggalLahir(watchedTempatLahir); // Fallback
             }
         } else {
             setTempatTanggalLahir(watchedTempatLahir || '');
@@ -232,21 +228,18 @@ const FormPendaftaranClient = () => {
 
     // Handle form submission
     async function onSubmit(values: FormSchemaType) {
-        // Convert dd/MM/yyyy tanggalLahir to yyyy-MM-dd for database
          let tanggalLahirDbFormat: string | null = null;
-         if (values.tanggalLahir && isValidDateString(values.tanggalLahir)) {
+         if (values.tanggalLahir instanceof Date) { // Check if it's a Date object
              try {
-                 const parsedDate = parse(values.tanggalLahir, 'dd/MM/yyyy', new Date());
-                 tanggalLahirDbFormat = format(parsedDate, 'yyyy-MM-dd');
+                 tanggalLahirDbFormat = format(values.tanggalLahir, 'yyyy-MM-dd');
              } catch (error) {
                  console.error("Error converting date for DB:", error);
-                 // Optionally handle the error, maybe show a toast
              }
          }
 
         const dataToSubmit = {
             ...values,
-            tanggalLahir: tanggalLahirDbFormat, // Send yyyy-MM-dd format
+            tanggalLahir: tanggalLahirDbFormat, // Send yyyy-MM-dd format or null
             tempatTanggalLahir: tempatTanggalLahir, // Send derived display value
             alamatLengkap: alamatLengkap, // Send derived display value
             // Ensure optional fields are handled correctly
@@ -358,10 +351,14 @@ const FormPendaftaranClient = () => {
 
     const CurrentStepIcon = steps[currentStep]?.icon || Info; // Use default icon
 
-     // Conditional rendering: Show loading state or nothing on the server/initial client render
+     // Render loading state until mounted
       if (!mounted) {
-          // Return null or a minimal placeholder that matches the server render
-          return null;
+          return (
+              <div className="flex items-center justify-center min-h-screen">
+                   <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+                   <span>Memuat formulir...</span>
+              </div>
+          );
       }
 
 
@@ -533,25 +530,48 @@ const FormPendaftaranClient = () => {
                                 </FormItem>
                               )}
                             />
-                            {/* Replace Calendar with Input */}
                              <FormField
                                 control={form.control}
                                 name="tanggalLahir"
                                 render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Tanggal Lahir</FormLabel>
+                                <FormItem className="flex flex-col">
+                                    <FormLabel>Tanggal Lahir</FormLabel>
+                                    <Popover>
+                                    <PopoverTrigger asChild>
                                         <FormControl>
-                                            <Input
-                                                placeholder="DD/MM/YYYY"
-                                                {...field}
-                                                // Optional: Add masking or formatting helpers if needed
-                                            />
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                            "pl-3 text-left font-normal",
+                                            !field.value && "text-muted-foreground"
+                                            )}
+                                        >
+                                            {field.value ? (
+                                            format(field.value, "dd MMMM yyyy", { locale: localeId })
+                                            ) : (
+                                            <span>Pilih tanggal</span>
+                                            )}
+                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                        </Button>
                                         </FormControl>
-                                         <FormDescription>
-                                           Gunakan format DD/MM/YYYY (Contoh: 15/01/2009).
-                                         </FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        disabled={(date) =>
+                                            date > new Date() || date < new Date("1980-01-01")
+                                        }
+                                        initialFocus
+                                        captionLayout="dropdown-buttons" // Use dropdowns for years/months
+                                        fromYear={1990} // Set start year for dropdown
+                                        toYear={new Date().getFullYear() - 10} // Set end year (e.g., 10 years ago)
+                                        />
+                                    </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
+                                </FormItem>
                                 )}
                             />
                           </div>
@@ -1113,8 +1133,7 @@ const FormPendaftaranClient = () => {
                 </Button>
 
                 {/* Render next/submit button based on mounted state and current step */}
-                 {mounted ? (
-                     currentStep < activeSteps.length - 1 ? (
+                 {currentStep < activeSteps.length - 1 ? (
                          <Button type="button" onClick={handleNext} className="bg-primary hover:bg-primary/90">
                              Selanjutnya <ArrowRight className="ml-2 h-4 w-4" />
                          </Button>
@@ -1128,13 +1147,7 @@ const FormPendaftaranClient = () => {
                                  </>
                              ) : 'Kirim Pendaftaran Saya'}
                          </Button>
-                     )
-                 ) : ( // Show a disabled loading state for the button before mount
-                     <Button type="button" disabled>
-                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                         Memuat...
-                     </Button>
-                 )}
+                     )}
               </div>
             </form>
           </Form>
