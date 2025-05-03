@@ -111,6 +111,7 @@ const steps = [
 export default function FormPendaftaranPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isClient, setIsClient] = useState(false); // State to track client-side rendering
+  const [mounted, setMounted] = useState(false); // State to track component mount
 
   const form = useForm<FormSchemaType>({
     resolver: zodResolver(formSchema),
@@ -171,14 +172,15 @@ export default function FormPendaftaranPage() {
   const watchedProvinsi = form.watch('provinsi');
   const watchedTinggal = form.watch('tinggal');
 
-  // Effect to signal client-side rendering
+  // Effect to signal client-side rendering and mount completion
   useEffect(() => {
     setIsClient(true);
+    setMounted(true); // Signal that the component has mounted
   }, []);
 
-  // Effect for Tempat, Tanggal Lahir - runs only on client
+  // Effect for Tempat, Tanggal Lahir - runs only on client after mount
   useEffect(() => {
-     if (!isClient) return; // Don't run on server
+     if (!mounted) return; // Don't run before mount
     if (watchedTempatLahir && watchedTanggalLahir) {
       try {
         const formattedDate = format(watchedTanggalLahir, 'dd MMMM yyyy', { locale: id });
@@ -190,11 +192,11 @@ export default function FormPendaftaranPage() {
     } else {
       setTempatTanggalLahir(watchedTempatLahir || '');
     }
-  }, [watchedTempatLahir, watchedTanggalLahir, isClient]);
+  }, [watchedTempatLahir, watchedTanggalLahir, mounted]);
 
-  // Effect for Alamat Lengkap - runs only on client
+  // Effect for Alamat Lengkap - runs only on client after mount
   useEffect(() => {
-    if (!isClient) return; // Don't run on server
+    if (!mounted) return; // Don't run before mount
     const rtRwString = (watchedRt && watchedRw) ? `RT ${watchedRt.padStart(3, '0')} / RW ${watchedRw.padStart(3, '0')}` : '';
     const parts = [
       watchedDukuhJalan,
@@ -205,7 +207,7 @@ export default function FormPendaftaranPage() {
       watchedProvinsi ? `Prov. ${watchedProvinsi}` : '',
     ];
     setAlamatLengkap(parts.filter(Boolean).join(', '));
-  }, [watchedDukuhJalan, watchedDesa, watchedRt, watchedRw, watchedKecamatan, watchedKabupaten, watchedProvinsi, isClient]);
+  }, [watchedDukuhJalan, watchedDesa, watchedRt, watchedRw, watchedKecamatan, watchedKabupaten, watchedProvinsi, mounted]);
 
   // Handle form submission
   async function onSubmit(values: FormSchemaType) {
@@ -254,9 +256,9 @@ export default function FormPendaftaranPage() {
     // --- End of TODO ---
   }
 
-    // Function to determine if a conditional step should be shown - runs only on client
+    // Function to determine if a conditional step should be shown - runs only on client after mount
     const shouldShowStep = (stepIndex: number): boolean => {
-        if (!isClient) return !steps[stepIndex]?.isConditional; // Initial server render assumes conditional steps are hidden unless default matches
+        if (!mounted) return false; // Don't show conditional steps before mount
         const step = steps[stepIndex];
         if (!step?.isConditional) {
             return true; // Always show non-conditional steps
@@ -266,7 +268,7 @@ export default function FormPendaftaranPage() {
     };
 
   const handleNext = async () => {
-     if (!isClient) return; // Prevent action on server
+     if (!mounted) return; // Prevent action before mount
     const currentStepConfig = steps[currentStep];
     const fieldsToValidate = currentStepConfig.fields as FieldPath<FormSchemaType>[];
 
@@ -297,7 +299,7 @@ export default function FormPendaftaranPage() {
   };
 
   const handlePrevious = () => {
-    if (!isClient) return; // Prevent action on server
+    if (!mounted) return; // Prevent action before mount
     let prevStepIndex = currentStep - 1;
     // Skip conditional step if condition was not met
      while (steps[prevStepIndex]?.isConditional && !shouldShowStep(prevStepIndex)) {
@@ -310,14 +312,14 @@ export default function FormPendaftaranPage() {
   };
 
 
-   // Calculate progress - runs only on client
-   const activeSteps = isClient ? steps.filter((_, index) => shouldShowStep(index)) : steps.filter(s => !s.isConditional);
-   const currentActiveStepIndex = isClient ? activeSteps.findIndex(step => step.id === steps[currentStep].id) : 0;
-   const progress = isClient ? ((currentActiveStepIndex + 1) / activeSteps.length) * 100 : 0;
+   // Calculate progress - runs only on client after mount
+   const activeSteps = mounted ? steps.filter((_, index) => shouldShowStep(index)) : steps.filter(s => !s.isConditional); // Show non-conditional initially
+   const currentActiveStepIndex = mounted ? activeSteps.findIndex(step => step.id === steps[currentStep].id) : 0;
+   const progress = mounted ? ((currentActiveStepIndex + 1) / activeSteps.length) * 100 : 0;
 
 
-    // Return loading state or placeholder until client is mounted
-    if (!isClient) {
+    // Render loading state until mounted to prevent hydration mismatch
+    if (!mounted) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                  <Loader2 className="mr-2 h-8 w-8 animate-spin" />
@@ -1117,3 +1119,5 @@ export default function FormPendaftaranPage() {
     </div>
   );
 }
+
+    
